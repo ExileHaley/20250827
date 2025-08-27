@@ -1,0 +1,29 @@
+### install foundry-rs/forge-std
+```shell
+$ forge install foundry-rs/forge-std --no-commit
+```
+### install openzeppelin-contracts
+```shell
+$ forge install openzeppelin/openzeppelin-contracts --no-commit
+```
+
+
+### deploy
+```shell
+$ forge script script/DeployScript.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+```
+
+### build token constructor
+```shell
+$ cast abi-encode "constructor(string,string,address,address,address)" "SNT" "SNT" 0x77F28Bf6aEED4727eeB1D7742c7120939717a587 0xBb294E00Cc67dF18f7DCA4010c90074Ae2867AC3 0x015c0E4B40EC22F4Dc570c658361fb4f3cBb9A97
+
+```
+
+### verify token contract
+```shell
+$ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6 0x0911Bc55aaAfa93496047681F2B02Dd8CC6585Dc src/Snt.sol:Snt  --constructor-args 0x00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000077f28bf6aeed4727eeb1d7742c7120939717a587000000000000000000000000bb294e00cc67df18f7dca4010c90074ae2867ac3000000000000000000000000015c0e4b40ec22f4dc570c658361fb4f3cbb9a970000000000000000000000000000000000000000000000000000000000000003534e5400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003534e540000000000000000000000000000000000000000000000000000000000 --etherscan-api-key Y43WNBZNXWR5V4AWQKGAQ9RCQEXTUHK88V
+
+```
+
+Snt address: 0x0911Bc55aaAfa93496047681F2B02Dd8CC6585Dc
+Pancake pair address: 0x69D7586474D16BC12C66C88cfc56b549b23F1130
