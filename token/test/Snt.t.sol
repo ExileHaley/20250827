@@ -36,12 +36,12 @@ contract SntTest is Test {
         snt = new Snt(initialRecipient, sellFee, buyFee);
         vm.stopPrank();
         
+        
     }
 
     function test_addLiquidity() public {
         
         vm.startPrank(initialRecipient);
-        snt.switchBurn();
         deal(usdt, initialRecipient, 10000e18);
         snt.approve(uniswapV2Router, 10000e18);
         IERC20(usdt).approve(uniswapV2Router, 10000e18);
@@ -49,8 +49,8 @@ contract SntTest is Test {
         IUniswapV2Router(uniswapV2Router).addLiquidity(
             usdt, 
             address(snt), 
-            10000e18, 
-            10000e18, 
+            1000e18, 
+            1000e18, 
             0, 
             0, 
             initialRecipient, 
@@ -59,9 +59,14 @@ contract SntTest is Test {
         vm.stopPrank();
 
         assertEq(snt.balanceOf(address(snt)), 0);
-        uint256 fee = 10000e18 * 3 / 100;
-        assertEq(snt.balanceOf(snt.pancakePair()), 10000e18 - fee);
+        uint256 fee = 1000e18 * 3 / 100;
+        assertEq(snt.balanceOf(snt.pancakePair()), 1000e18 - fee);
         assertEq(snt.balanceOf(sellFee), fee);
+     
+        vm.startPrank(initialRecipient);
+        snt.transfer(user, 10e18);
+        vm.stopPrank();
+       
     }
 
 
@@ -69,27 +74,17 @@ contract SntTest is Test {
     function test_burnAfter10Minutes() public {
         // --- Step1: 添加初始流动性 ---
         test_addLiquidity();  
+        vm.warp(block.timestamp + 11 minutes);
+        
+        vm.startPrank(initialRecipient);
+        snt.transfer(user, 10e18);
+        vm.stopPrank();
+        uint256 afetr = snt.balanceOf(snt.pancakePair());
+        // console.log("balance of pair afetr burn:",afetr);
+        assertEq(970e18-(970e18 * 40 / 10000), afetr);
 
-        uint256 before = snt.balanceOf(snt.pancakePair());
-
-        // 连续 3 轮验证，每轮推进 11 分钟后触发一次转账
-        for (uint256 i = 0; i < 3; i++) {
-            // --- Step2: 时间推进 ---
-            vm.warp(block.timestamp + 11 minutes);
-
-            // --- Step3: 用户转账触发销毁 ---
-            vm.startPrank(user);
-            deal(address(snt), user, 100e18);
-            snt.transfer(initialRecipient, 10e18);
-            vm.stopPrank();
-
-            // --- Step4: 验证 ---
-            uint256 afterBal = snt.balanceOf(snt.pancakePair());
-            assertLt(afterBal, before, string(abi.encodePacked("Round ", vm.toString(i), ": LP should have burned some SNT")));
-            
-            // 更新基准值
-            before = afterBal;
-        }
+        console.log("current time:",block.timestamp);
+        console.log("last burn time afetr burn:",snt.lastBurnTime());
 
         vm.startPrank(user);
         address[] memory path = new address[](2);

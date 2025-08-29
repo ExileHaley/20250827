@@ -14,6 +14,7 @@ interface IPancakeFactory {
 
 interface IPancakePair {
     function sync() external;
+    function totalSupply() external view returns (uint);
 }
 
 
@@ -55,84 +56,20 @@ contract Snt is ERC20, Ownable{
         buyFee = _buyFee;
     } 
 
-    function switchBurn() external onlyOwner{
-        lastBurnTime = block.timestamp;
-    }
-
-    // function _update( address from, address to, uint256 amount ) internal virtual override { //mint / burn 
-    //     if (from == address(0) || to == address(0)) { 
-    //         super._update(from, to, amount); 
-    //         return; 
-    //     } 
-
-    //     uint256 adjustedAmount = (amount / 1e16) * 1e16; 
-    //     if (adjustedAmount == 0) return; 
-        
-    //     uint256 taxAmount = 0; 
-    //     address feeRecipient = address(0); 
-    //     if (to == pancakePair && sellFee != address(0)) { 
-    //         taxAmount = (adjustedAmount * SELL_TAX_RATE) / 10000; 
-    //         feeRecipient = sellFee; 
-    //     } else if (from == pancakePair && buyFee != address(0)) { 
-    //         taxAmount = (adjustedAmount * BUY_TAX_RATE) / 10000; 
-    //         feeRecipient = buyFee; 
-    //     } 
-        
-    //     if (taxAmount > 0) { 
-    //         super._update(from, feeRecipient, taxAmount); 
-    //         super._update(from, to, adjustedAmount - taxAmount); 
-    //     } else { 
-    //         super._update(from, to, adjustedAmount); 
-    //     } 
-
-    //     if(to != pancakePair && from != pancakePair) _tryBurnFromPair(); 
-    // }
-
-
-    // function _tryBurnFromPair() internal {
-    //     if (block.timestamp < lastBurnTime + BURN_INTERVAL) {
-    //         return;
-    //     }
-
-    //     uint256 elapsed = block.timestamp - lastBurnTime;
-    //     uint256 cycles = elapsed / BURN_INTERVAL;
-    //     uint256 pairBalance = balanceOf(pancakePair);
-
-    //     if (pairBalance == 0 || cycles == 0) return;
-
-
-    //     uint256 remainingRate = _pow(9980, cycles, 10000); // 9980/10000 = 0.998
-    //     uint256 burnAmount = pairBalance * (10000 - remainingRate) / 10000;
-
-    //     if (burnAmount > 0) {
-    //         _burn(pancakePair, burnAmount);
-    //     }
-
-    //     lastBurnTime += cycles * BURN_INTERVAL;
-    // }
-
-    
-    // function _pow(uint256 base, uint256 exp, uint256 denom) internal pure returns (uint256) {
-    //     uint256 result = denom; 
-    //     for (uint256 i = 0; i < exp; i++) {
-    //         result = (result * base) / denom;
-    //     }
-    //     return result;
-    // }
-
-
-    function safeBurn(address account, uint256 amount) external {
-        require(msg.sender == address(this), "Only self");
-        _burn(account, amount);
-    }
-
   
     function _update(
         address from,
         address to,
         uint256 amount
     ) internal virtual override {
-        // mint / burn 情况直接调用父类
+
+        if (lastBurnTime == 0 && pancakePair != address(0)) {
+            try IPancakePair(pancakePair).totalSupply() returns (uint256 supply) {
+                if (supply > 0) lastBurnTime = block.timestamp;
+            } catch {}
+        }
+        
+        // mint / burn
         if (from == address(0) || to == address(0)) {
             super._update(from, to, amount);
             return;
@@ -158,14 +95,14 @@ contract Snt is ERC20, Ownable{
         } else {
             super._update(from, to, adjustedAmount);
         }
-
-      
-        if (to != pancakePair && from != pancakePair) _safeTryBurnFromPair();
+        
+        if(from != pancakePair && to != pancakePair) try this._safeTryBurnFromPair(){} catch{}
     }
 
-   
-    function _safeTryBurnFromPair() internal {
-        if (block.timestamp < lastBurnTime + BURN_INTERVAL) return;
+    function _safeTryBurnFromPair() external {
+        require(msg.sender == address(this), "Only self");
+
+        if (block.timestamp < lastBurnTime + BURN_INTERVAL || lastBurnTime == 0) return;
 
         uint256 elapsed = block.timestamp - lastBurnTime;
         uint256 cycles = elapsed / BURN_INTERVAL;
@@ -173,33 +110,16 @@ contract Snt is ERC20, Ownable{
 
         if (pairBalance == 0 || cycles == 0) return;
 
-       
-        uint256 remainingRate = _pow(9980, cycles, 10000); // 9980/10000 = 0.998
-        uint256 burnAmount = (pairBalance * (10000 - remainingRate)) / 10000;
+        uint256 burnRate = cycles * BURN_RATE;
+        if (burnRate > 5000) burnRate = 5000; 
+
+        uint256 burnAmount = (pairBalance * burnRate) / 10000;
 
         if (burnAmount > 0) {
-            
-            (bool success, ) = address(this).call(
-                abi.encodeWithSelector(this.safeBurn.selector, pancakePair, burnAmount)
-            );
-            if (success) {
-                lastBurnTime += cycles * BURN_INTERVAL;
-            }
-            IPancakePair(pancakePair).sync();
+            _burn(pancakePair, burnAmount);
+            lastBurnTime += cycles * BURN_INTERVAL;
+            try IPancakePair(pancakePair).sync() {} catch {}
         }
-    }
-
-
-    function _pow(
-        uint256 base,
-        uint256 exp,
-        uint256 denom
-    ) internal pure returns (uint256) {
-        uint256 result = denom;
-        for (uint256 i = 0; i < exp; i++) {
-            result = (result * base) / denom;
-        }
-        return result;
     }
 
 
