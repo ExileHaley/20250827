@@ -90,6 +90,22 @@ contract SntTest is Test {
             // 更新基准值
             before = afterBal;
         }
+
+        vm.startPrank(user);
+        address[] memory path = new address[](2);
+        path[0] = usdt;
+        path[1] = address(snt);
+        deal(usdt, user, 50e18);
+        IERC20(usdt).approve(uniswapV2Router, 50e18);
+        IUniswapV2Router(uniswapV2Router).swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            50e18, 
+            0, 
+            path, 
+            user, 
+            block.timestamp
+        );
+        vm.stopPrank();
+
     }
 
     function test_buy() public{
@@ -153,4 +169,10 @@ contract SntTest is Test {
         vm.stopPrank();
     }
 
+    function test_transfer() public {
+        test_addLiquidity();
+        vm.startPrank(initialRecipient);
+        snt.transfer(user, 100e18);
+        vm.stopPrank();
+    }
 }

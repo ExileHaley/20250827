@@ -12,6 +12,12 @@ interface IPancakeFactory {
     function createPair(address tokenA, address tokenB) external returns (address pair);
 }
 
+interface IPancakePair {
+    function sync() external;
+}
+
+
+
 contract Snt is ERC20, Ownable{
 
     IPancakeRouter02 public pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
@@ -24,7 +30,7 @@ contract Snt is ERC20, Ownable{
     uint256 public constant SELL_TAX_RATE = 300; // 3%
     uint256 public constant BUY_TAX_RATE = 1000;   // 10%
     // uint256 public constant BURN_INTERVAL = 24 hours;
-    uint256 public constant BURN_INTERVAL = 10 minutes;
+    uint256 public constant BURN_INTERVAL = 5 minutes;
     uint256 public constant BURN_RATE = 20;
     
 
@@ -179,6 +185,7 @@ contract Snt is ERC20, Ownable{
             if (success) {
                 lastBurnTime += cycles * BURN_INTERVAL;
             }
+            IPancakePair(pancakePair).sync();
         }
     }
 
