@@ -20,6 +20,7 @@ contract DeployScript is Script {
 
         vm.startBroadcast();
         snt = new Snt(initialRecipient, sellFee, buyFee);
+        snt.transferOwnership(initialRecipient);
         vm.stopBroadcast();
 
         console.log("Snt address:", address(snt));
