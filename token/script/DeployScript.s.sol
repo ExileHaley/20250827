@@ -11,7 +11,7 @@ contract DeployScript is Script {
     address initialRecipient;
 
     function setUp() public {
-        initialRecipient = 0x77F28Bf6aEED4727eeB1D7742c7120939717a587;
+        initialRecipient = 0x27500f497A6195913ad93eaA7f9ffce9C156350a;
         buyFee = 0x015c0E4B40EC22F4Dc570c658361fb4f3cBb9A97;
         sellFee = 0xBb294E00Cc67dF18f7DCA4010c90074Ae2867AC3;
     }
