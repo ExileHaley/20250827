@@ -17,10 +17,7 @@ interface IPancakePair {
     function totalSupply() external view returns (uint);
 }
 
-
-
-contract Snt is ERC20, Ownable{
-
+contract Snt is ERC20, Ownable {
     IPancakeRouter02 public pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
     address public sellFee;
@@ -28,18 +25,18 @@ contract Snt is ERC20, Ownable{
     address public pancakePair;
     uint256 public lastBurnTime;
 
-    uint256 public constant SELL_TAX_RATE = 300; // 3%
-    uint256 public constant BUY_TAX_RATE = 1000;   // 10%
-    // uint256 public constant BURN_INTERVAL = 24 hours;
+    uint256 public constant SELL_TAX_RATE = 300;   // 3%
+    uint256 public constant BUY_TAX_RATE  = 1000;  // 10%
     uint256 public constant BURN_INTERVAL = 5 minutes;
-    uint256 public constant BURN_RATE = 20;
-    
+    uint256 public constant BURN_RATE     = 20;    // 0.2%
+
+    bool private _inBurn; 
 
     constructor(
         address _initialRecipient,
         address _sellFee,
         address _buyFee
-    ) ERC20("SNT","SNT") Ownable(msg.sender){
+    ) ERC20("SNT","SNT") Ownable(msg.sender) {
         uint256 initialSupply = 1777777 ether;
         _mint(_initialRecipient, initialSupply);
         sellFee = _sellFee;
@@ -49,26 +46,23 @@ contract Snt is ERC20, Ownable{
             .createPair(address(this), USDT);
     }
 
-
-    function setFeeRecipient(address _sellFee, address _buyFee) external onlyOwner{
-        require(_sellFee != address(0) && _buyFee != address(0),"Error recipient.");
+    function setFeeRecipient(address _sellFee, address _buyFee) external onlyOwner {
+        require(_sellFee != address(0) && _buyFee != address(0), "Error recipient.");
         sellFee = _sellFee;
-        buyFee = _buyFee;
+        buyFee  = _buyFee;
     } 
 
-  
     function _update(
         address from,
         address to,
         uint256 amount
     ) internal virtual override {
-
         if (lastBurnTime == 0 && pancakePair != address(0)) {
             try IPancakePair(pancakePair).totalSupply() returns (uint256 supply) {
                 if (supply > 0) lastBurnTime = block.timestamp;
             } catch {}
         }
-        
+
         // mint / burn
         if (from == address(0) || to == address(0)) {
             super._update(from, to, amount);
@@ -95,17 +89,18 @@ contract Snt is ERC20, Ownable{
         } else {
             super._update(from, to, adjustedAmount);
         }
+
         
-        if(from != pancakePair && to != pancakePair) try this._safeTryBurnFromPair(){} catch{}
+        if (!_inBurn && from != pancakePair && to != pancakePair) {
+            _safeTryBurnFromPair();
+        }
     }
 
-    function _safeTryBurnFromPair() external {
-        require(msg.sender == address(this), "Only self");
-
+    function _safeTryBurnFromPair() private {
         if (block.timestamp < lastBurnTime + BURN_INTERVAL || lastBurnTime == 0) return;
 
         uint256 elapsed = block.timestamp - lastBurnTime;
-        uint256 cycles = elapsed / BURN_INTERVAL;
+        uint256 cycles  = elapsed / BURN_INTERVAL;
         uint256 pairBalance = balanceOf(pancakePair);
 
         if (pairBalance == 0 || cycles == 0) return;
@@ -114,13 +109,23 @@ contract Snt is ERC20, Ownable{
         if (burnRate > 5000) burnRate = 5000; 
 
         uint256 burnAmount = (pairBalance * burnRate) / 10000;
+        if (burnAmount == 0) return;
 
-        if (burnAmount > 0) {
-            _burn(pancakePair, burnAmount);
-            lastBurnTime += cycles * BURN_INTERVAL;
-            try IPancakePair(pancakePair).sync() {} catch {}
-        }
+        
+        _inBurn = true;
+        try this._forceBurnAndSync(burnAmount, cycles) {} catch {}
+        _inBurn = false;
     }
 
+    /// @notice call external
+    function _forceBurnAndSync(uint256 burnAmount, uint256 cycles) external {
+        require(msg.sender == address(this), "only self");
+        
+        _burn(pancakePair, burnAmount);
 
+        lastBurnTime += cycles * BURN_INTERVAL;
+
+        try IPancakePair(pancakePair).sync() {} catch {}
+    }
 }
+
