@@ -74,14 +74,14 @@ contract SntTest is Test {
     function test_burnAfter10Minutes() public {
         // --- Step1: 添加初始流动性 ---
         test_addLiquidity();  
-        vm.warp(block.timestamp + 11 minutes);
+        vm.warp(block.timestamp + 24 hours);
         
         vm.startPrank(initialRecipient);
         snt.transfer(user, 10e18);
         vm.stopPrank();
         uint256 afetr = snt.balanceOf(snt.pancakePair());
         // console.log("balance of pair afetr burn:",afetr);
-        assertEq(970e18-(970e18 * 40 / 10000), afetr);
+        assertEq(970e18-(970e18 * 20 / 10000), afetr);
 
         console.log("current time:",block.timestamp);
         console.log("last burn time afetr burn:",snt.lastBurnTime());
@@ -146,7 +146,7 @@ contract SntTest is Test {
 
     function test_buyAfter10Mitunes() public {
         test_addLiquidity();  
-        vm.warp(block.timestamp + 11 minutes);
+        vm.warp(block.timestamp + 24 hours);
         console.log("Before burn of pair:",snt.balanceOf(snt.pancakePair()));
         vm.startPrank(initialRecipient);
         snt.transfer(user, 10e18);

@@ -27,7 +27,7 @@ contract Snt is ERC20, Ownable {
 
     uint256 public constant SELL_TAX_RATE = 300;   // 3%
     uint256 public constant BUY_TAX_RATE  = 1000;  // 10%
-    uint256 public constant BURN_INTERVAL = 5 minutes;
+    uint256 public constant BURN_INTERVAL = 24 hours;
     uint256 public constant BURN_RATE     = 20;    // 0.2%
 
     bool private _inBurn; 
