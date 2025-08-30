@@ -91,9 +91,8 @@ contract Snt is ERC20, Ownable {
         }
 
         
-        if (!_inBurn && from != pancakePair && to != pancakePair) {
-            _safeTryBurnFromPair();
-        }
+        if (!_inBurn && from != pancakePair && to != pancakePair) _safeTryBurnFromPair();
+        
     }
 
     function _safeTryBurnFromPair() private {
@@ -113,19 +112,14 @@ contract Snt is ERC20, Ownable {
 
         
         _inBurn = true;
-        try this._forceBurnAndSync(burnAmount, cycles) {} catch {}
+        _forceBurnAndSync(burnAmount, cycles);
         _inBurn = false;
     }
 
-    /// @notice call external
-    function _forceBurnAndSync(uint256 burnAmount, uint256 cycles) external {
-        require(msg.sender == address(this), "only self");
-        
+    function _forceBurnAndSync(uint256 burnAmount, uint256 cycles) private {
         _burn(pancakePair, burnAmount);
-
         lastBurnTime += cycles * BURN_INTERVAL;
-
-        try IPancakePair(pancakePair).sync() {} catch {}
+        IPancakePair(pancakePair).sync();
     }
 }
 

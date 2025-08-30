@@ -147,7 +147,11 @@ contract SntTest is Test {
     function test_buyAfter10Mitunes() public {
         test_addLiquidity();  
         vm.warp(block.timestamp + 11 minutes);
-
+        console.log("Before burn of pair:",snt.balanceOf(snt.pancakePair()));
+        vm.startPrank(initialRecipient);
+        snt.transfer(user, 10e18);
+        vm.stopPrank();
+        console.log("After burn of pair:",snt.balanceOf(snt.pancakePair()));
         vm.startPrank(user);
         address[] memory path = new address[](2);
         path[0] = usdt;
