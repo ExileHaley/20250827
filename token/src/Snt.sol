@@ -36,7 +36,7 @@ contract Snt is ERC20, Ownable {
         address _initialRecipient,
         address _sellFee,
         address _buyFee
-    ) ERC20("SNT","SNT") Ownable(msg.sender) {
+    ) ERC20("GAT","GAT") Ownable(msg.sender) {
         uint256 initialSupply = 1777777 ether;
         _mint(_initialRecipient, initialSupply);
         sellFee = _sellFee;
