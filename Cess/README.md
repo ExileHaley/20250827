@@ -39,3 +39,7 @@ function getSubscribeInfo() external view returns(uint256 length, uint256 totalA
 ### 方法列表
 ```javascript
 ```
+
+### 需求如下:
+##### 提现手续费：43天后手续费减到0，前10天每天手续费递减5/1000，后面每天递减3/1000
+##### 
