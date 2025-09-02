@@ -19,7 +19,7 @@ $ forge script script/DeploySubscribe.s.sol -vvv --rpc-url=https://bsc.blockrazo
 ```
 
 ### usdt合约:0x55d398326f99059fF775485246999027B3197955
-### Subscribe合约:0x32711e7fdb10Be1F4545B90D3A87C8CdFa4Bc061
+### Subscribe合约:0x02496aB388d5C6a042D66aCED3ab3dE85F5b4a85
 ### abi路径:./out/Subscribe.sol/Subscribe.json
 ### 方法列表
 ```solidity

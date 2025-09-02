@@ -18,9 +18,9 @@ contract Subscribe is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
     // uint256 public  ADVANCED = 2900e18;
     // uint256 public  ELITE = 5900e18;
 
-    uint256 public  BASIC = 1e18;
-    uint256 public  ADVANCED = 2e18;
-    uint256 public  ELITE = 3e18;
+    uint256 public  BASIC;
+    uint256 public  ADVANCED;
+    uint256 public  ELITE;
 
     struct User {
         uint256 subscribeAmount;
@@ -44,9 +44,9 @@ contract Subscribe is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         __Ownable_init_unchained(_msgSender());
         __UUPSUpgradeable_init_unchained();
         recipient = _recipient;
-        BASIC = 900e18;
-        ADVANCED = 2900e18;
-        ELITE = 5900e18;
+        BASIC = 1e18;
+        ADVANCED = 2e18;
+        ELITE = 3e18;
     }
 
     // Authorize contract upgrades only by the owner
