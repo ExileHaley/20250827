@@ -10,7 +10,8 @@ contract DeploySubscribe is Script {
     address public recipient;
 
     function setUp() public {
-        recipient = address(0);
+        //
+        recipient = address(0x48f74550535aA6Ab31f62e8f0c00863866C8606b);
     }
 
     function run() public {
