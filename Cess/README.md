@@ -18,6 +18,12 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 $ forge script script/DeploySubscribe.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
+### deploy
+```shell
+$ forge script script/DeployStaking.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+```
+
+
 ### usdt合约:0x55d398326f99059fF775485246999027B3197955
 ### Subscribe合约:0x02496aB388d5C6a042D66aCED3ab3dE85F5b4a85
 ### abi路径:./out/Subscribe.sol/Subscribe.json
@@ -35,11 +41,9 @@ function getEliteUsersLength() external view returns (address[] memory);
 function getSubscribeInfo() external view returns(uint256 length, uint256 totalAmount)
 ```
 
-### staking合约:
+
+### cfun代币合约: 0x329d91bBCC0214d6Ef4017B9EC2d99Eff409969f
+### staking合约:0x5C9D3252ba1EBd5c5d047C0C9cf9e022ccE16950
 ### 方法列表
 ```javascript
 ```
-
-### 需求如下:
-##### 提现手续费：43天后手续费减到0，前10天每天手续费递减5/1000，后面每天递减3/1000
-##### 

@@ -5,8 +5,8 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {TransferHelper} from "./TransferHelper.sol";
-import {ReentrancyGuard} from "./ReentrancyGuard.sol";
+import {TransferHelper} from "./libraries/TransferHelper.sol";
+import {ReentrancyGuard} from "./libraries/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Subscribe is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard {
