@@ -44,6 +44,7 @@ function getSubscribeInfo() external view returns(uint256 length, uint256 totalA
 
 ### cfun代币合约: 0x329d91bBCC0214d6Ef4017B9EC2d99Eff409969f
 ### staking合约:0x5C9D3252ba1EBd5c5d047C0C9cf9e022ccE16950
+### abi路径:./out/Staking.sol/Staking.json
 ### 方法列表
 ```javascript
 //用户质押cess，amount是cess的数量，要求10000个起步
