@@ -46,4 +46,6 @@ function getSubscribeInfo() external view returns(uint256 length, uint256 totalA
 ### staking合约:0x5C9D3252ba1EBd5c5d047C0C9cf9e022ccE16950
 ### 方法列表
 ```javascript
+//用户质押cess，amount是cess的数量，要求10000个起步
+function stake(uint256 amount) external;
 ```
