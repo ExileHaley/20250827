@@ -65,4 +65,4 @@ struct SignMessage{
 function withdrawWithSignature(SignatureInfo.SignMessage memory _msg) external
 ```
 ### apifox
-submitones 在 Apifox 邀请你加入团队 个人团队 https://app.apifox.com/invite?token=oMoVp_iWZZm2N6o43Em1Q
+submitones 在 Apifox 邀请你加入团队 个人团队 https://app.apifox.com/invite?token=O5UP9xgCe-YuXDZsBVsTT
