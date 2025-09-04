@@ -61,7 +61,8 @@ struct SignMessage{
         bytes32 r; // r: parameter
         bytes32 s;
     } 
-//提现
+//提现，参数传上面这个结构体
+function withdrawWithSignature(SignatureInfo.SignMessage memory _msg) external
 ```
 ### apifox
 submitones 在 Apifox 邀请你加入团队 个人团队 https://app.apifox.com/invite?token=oMoVp_iWZZm2N6o43Em1Q
