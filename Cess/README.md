@@ -49,6 +49,18 @@ function getSubscribeInfo() external view returns(uint256 length, uint256 totalA
 ```javascript
 //用户质押cess，amount是cess的数量，要求10000个起步
 function stake(uint256 amount) external;
+struct SignMessage{
+        string  mark; //标识，不要重复
+        address token; //代币合约地址
+        address recipient; //代币接收者
+        uint256 amount; //要提现代币的数量
+        uint256 fee; //提现手续费
+        uint256 nonce; //nonce值
+        uint256 deadline; //签名有效截止时间戳
+        uint8 v; // v: parameter (27 or 28)
+        bytes32 r; // r: parameter
+        bytes32 s;
+    } 
 //提现
 ```
 ### apifox
