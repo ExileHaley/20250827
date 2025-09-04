@@ -49,4 +49,7 @@ function getSubscribeInfo() external view returns(uint256 length, uint256 totalA
 ```javascript
 //用户质押cess，amount是cess的数量，要求10000个起步
 function stake(uint256 amount) external;
+//提现
 ```
+### apifox
+submitones 在 Apifox 邀请你加入团队 个人团队 https://app.apifox.com/invite?token=oMoVp_iWZZm2N6o43Em1Q
