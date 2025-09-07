@@ -46,7 +46,6 @@ contract Staking is Initializable, OwnableUpgradeable, EIP712Upgradeable, UUPSUp
 
     function initialize(
         address _cessToken,
-        address _cfunToken, 
         address _recipient, 
         address _admin, 
         address _signer,
@@ -56,7 +55,6 @@ contract Staking is Initializable, OwnableUpgradeable, EIP712Upgradeable, UUPSUp
         __Ownable_init_unchained(_msgSender());
         __UUPSUpgradeable_init_unchained();
         cessToken = _cessToken;
-        cfunToken = _cfunToken;
         recipient = _recipient;
         admin = _admin;
         signer = _signer;
@@ -64,10 +62,14 @@ contract Staking is Initializable, OwnableUpgradeable, EIP712Upgradeable, UUPSUp
         addWhitelist(_addrs);
     }
 
-    function setTokenAddr(address _cessToken, address _cfunToken, address _recipient, address _signer) external onlyOwner{
+    function setTokenAddr(address _cessToken, address _cfunToken) external onlyOwner{
         cessToken = _cessToken;
         cfunToken = _cfunToken;
+    }
+
+    function setConfig(address _recipient, address _admin, address _signer) external onlyOwner{
         recipient = _recipient;
+        admin = _admin;
         signer = _signer;
     }
 
@@ -95,7 +97,8 @@ contract Staking is Initializable, OwnableUpgradeable, EIP712Upgradeable, UUPSUp
 
     function emergencyWithdraw() external nonReentrant onlyAdmin {
         uint256 cessAmount = IERC20(cessToken).balanceOf(address(this));
-        uint256 cfunAmount = IERC20(cfunToken).balanceOf(address(this));
+        uint256 cfunAmount;
+        if(cfunToken != address(0)) cfunAmount = IERC20(cfunToken).balanceOf(address(this));
         if(cessAmount > 0) TransferHelper.safeTransfer(cessToken, msg.sender, cessAmount);
         if(cfunAmount > 0) TransferHelper.safeTransfer(cfunToken, msg.sender, cfunAmount);
     }

@@ -13,11 +13,6 @@ contract Subscribe is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955; 
     address public recipient;
 
-    // 三个固定档位
-    // uint256 public  BASIC = 900e18;
-    // uint256 public  ADVANCED = 2900e18;
-    // uint256 public  ELITE = 5900e18;
-
     uint256 public  BASIC;
     uint256 public  ADVANCED;
     uint256 public  ELITE;
@@ -44,9 +39,9 @@ contract Subscribe is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         __Ownable_init_unchained(_msgSender());
         __UUPSUpgradeable_init_unchained();
         recipient = _recipient;
-        BASIC = 1e18;
-        ADVANCED = 2e18;
-        ELITE = 3e18;
+        BASIC = 900e18;
+        ADVANCED = 2900e18;
+        ELITE = 5900e18;
     }
 
     // Authorize contract upgrades only by the owner

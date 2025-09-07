@@ -13,14 +13,19 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 ```
 
 
-### deploy
+### deploy subscribe
 ```shell
 $ forge script script/DeploySubscribe.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
-### deploy
+### deploy staking
 ```shell
 $ forge script script/DeployStaking.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+```
+
+### deploy exchange
+```shell
+$ forge script script/DeployExchange.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
 
@@ -64,5 +69,25 @@ struct SignMessage{
 //提现，参数传上面这个结构体
 function withdrawWithSignature(SignatureInfo.SignMessage memory _msg) external
 ```
+
+### 兑换合约
+### 方法列表
+```javascript
+//输入cess数量可以得到能兑换的cfun数量，预览兑换结果，cessAmount是cess的数量，cfunAmount返回的是cfun的数量
+function getExchangeResult(uint256 cessAmount) public view returns (uint256 cfunAmount);
+//兑换，输入的是cess的数量，cessAmount是cess的数量
+function exchange(uint256 cessAmount) external;
+//查询用户钱包，token要查询的代币合约地址，user要查询的钱包地址
+function getBalance(address token, address user) external view returns(uint256 amount);
+```
+
+
+### 部署正式版本
+### 认购合约(Subscribe):0xaef41D3c4665F6e2E91c968D94d0308d70ea5550
+### 质押合约(Staking):0x622e37DAE879e6c5b8e6388Ec0b09D1BFAdB9929
+### 兑换合约(Exchange):0x1C86a75B91a897294ca213b075fb614F46E09aaD
+
+
+
 ### apifox
 submitones 在 Apifox 邀请你加入团队 个人团队 https://app.apifox.com/invite?token=O5UP9xgCe-YuXDZsBVsTT
