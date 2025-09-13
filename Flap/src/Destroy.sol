@@ -40,7 +40,6 @@ contract Destroy is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
     // --- events ---
     event FlapDestroyed(address indexed user, uint256 amount);
-    event Unstaked(address indexed user, uint256 amount, uint256 fee);
     event Claimed(address indexed user, uint256 amount);
     event TotalDailyOutputChanged(uint256 oldVal, uint256 newVal);
 
