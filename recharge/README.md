@@ -18,6 +18,7 @@ $ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz -
 ```
 
 ### rechage:0x6845F6E58A4DC8606cB839C49DC235063Cf24463
+### abi:./out/recharge.sol/recharge.json
 
 ```json
 {
