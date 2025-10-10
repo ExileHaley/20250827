@@ -28,9 +28,14 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     }
 
     function changeAdmin(address _newAdmin) external onlyOwner {
-        require(_newAdmin != address(0), "Zero address");
+        require(_newAdmin != address(0), "ZERO_ADDRESS.");
         emit AdminshipTransferred(admin, _newAdmin);
         admin = _newAdmin;
+    }
+
+    function changeRecipient(address _newRecipient) external onlyOwner {
+        require(_newRecipient != address(0), "ZERO_ADDRESS.");
+        recipient = _newRecipient;
     }
 
     // Authorize contract upgrades only by the owner
