@@ -17,20 +17,18 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 $ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
-### rechage:0xAeAB14DA95C286F2740aF509067BC0b12ACe2FE4
+### rechage:
 ### abi:./out/recharge.sol/recharge.json
 
-```json
-{
-  "amount": "100",
-  "coin_token": "USDT",
-  "contract_address": "0x55d398326f99059ff775485246999027b3197955",
-  "from_address": "0x9559f4e715d058ecd172cb6f3775fe8065781262",
-  "hash": "0x330db4afa19f332ad2620c665dfb534d09045969c329e5df54f34429c10c7524",
-  "main_chain": "bsc",
-  "recharge_type": "1",
-  "remarks": "PACKAGE2292_202510071426584915",
-  "status": "3",
-  "to_address": "0x9559f4e715d058ecd172cb6f3775fe8065781262"
-}
+```solidity
+//单币种充值，token传0地址标识要充值主币，其他地址正常，amount充值的数量，remark标识
+function singleRecharge(address token, uint256 amount, string calldata remark) external payable;
+//双币种充值，token0/token1如果其中一个为0地址，则表示充值主币，amount0/amount1要与之对应
+function multiRecharge(
+        address token0,
+        uint256 amount0,
+        address token1,
+        uint256 amount1,
+        string calldata remark
+    ) external payable；
 ```
