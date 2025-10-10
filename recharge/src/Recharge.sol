@@ -15,7 +15,13 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public recipient;
 
     event AdminshipTransferred(address indexed previousAdmin, address indexed newAdmin);
-    event saveOrder(address _users, address _tokenAddress, uint256 _amount, string _remark);
+    // event saveOrder(address _users, address _tokenAddress, uint256 _amount, string _remark);
+    event TransactionDetails(
+        address[] tokenAddress,
+        uint256[] amount,
+        string remark,
+        address[] customerAddress
+    );
 
     receive() external payable{}
 
@@ -52,7 +58,14 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
             uint256 refund = msg.value - amount;
             if (refund > 0) TransferHelper.safeTransferETH(msg.sender, refund); // 退回多余部分
         }
-        emit saveOrder(msg.sender, token, amount, remarks);
+        address[] memory tokenAddress = new address[](1);
+        tokenAddress[0] = token;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        address[] memory customerAddress = new address[](1);
+        customerAddress[0] = msg.sender;
+
+        emit TransactionDetails(tokenAddress, amounts, remarks, customerAddress);
     }
 
     function withdraw_(address token, address[] calldata users, address to) external onlyAdmin(){
