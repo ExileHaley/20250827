@@ -13,9 +13,9 @@ contract RechargeScript is Script{
     address public sender;
 
     function setUp() public {
-        recipient = address(0xc94CF40E0DC051Cd5D9a2686D39871B61264093e);
-        admin = address(0xb73Af99710FC10b9167FFE12BEa22Ba61cDc162e);
-        operator = address(0xb73Af99710FC10b9167FFE12BEa22Ba61cDc162e);
+        recipient = address(0xD306aC9A106D062796848C208021c3f44624e66a);
+        admin = address(0x7ACe9699725c246C8E26d896903779aCF579A192);
+        operator = address(0x7ACe9699725c246C8E26d896903779aCF579A192);
         sender = address(0x7ACe9699725c246C8E26d896903779aCF579A192);
     }
 
