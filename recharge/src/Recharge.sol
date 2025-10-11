@@ -14,6 +14,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public admin;
     address public operator;
     address public recipient;
+    address public sender;
 
     event AdminshipTransferred(address indexed previousAdmin, address indexed newAdmin);
     event MultiRecharge(address user, address token0, uint256 amount0, address token1, uint256 amount1, string remark);
@@ -48,19 +49,26 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
          operator = _newOperator;
     }
 
+    function changeSender(address _newSender) external onlyAdmin(){
+        require(_newSender != address(0), "ZERO_ADDRESS.");
+        sender = _newSender;
+    }
+
     // Authorize contract upgrades only by the owner
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner(){}
 
     function initialize(
         address _admin,
         address _operator,
-        address _recipient
+        address _recipient,
+        address _sender
     ) public initializer {
         __Ownable_init_unchained(_msgSender());
         __UUPSUpgradeable_init_unchained();
         admin = _admin;
         operator = _operator;
         recipient = _recipient;
+        sender = _sender;
     }
 
     function singleRecharge(address token, uint256 amount, string calldata remark) external payable {
@@ -140,7 +148,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
 
     function withdraw(address token, uint256 amount, address to) external onlyAdmin(){
         require(amount > 0,"ERROR_AMOUNT.");
-        if(token != address(0)) TransferHelper.safeTransferFrom(token, recipient, to, amount);
+        if(token != address(0)) TransferHelper.safeTransferFrom(token, sender, to, amount);
         else TransferHelper.safeTransferETH(to, amount);
         emit Withdraw(token, to, amount);
     }
