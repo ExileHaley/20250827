@@ -12,6 +12,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard{
 
     address public admin;
+    address public operator;
     address public recipient;
 
     event AdminshipTransferred(address indexed previousAdmin, address indexed newAdmin);
@@ -27,15 +28,25 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         _;
     }
 
+    modifier onlyOperator(){
+        require(msg.sender == operator, "ERROR_ADMIN.");
+        _;
+    }
+
     function changeAdmin(address _newAdmin) external onlyOwner {
         require(_newAdmin != address(0), "ZERO_ADDRESS.");
         emit AdminshipTransferred(admin, _newAdmin);
         admin = _newAdmin;
     }
 
-    function changeRecipient(address _newRecipient) external onlyOwner {
+    function changeRecipient(address _newRecipient) external onlyAdmin {
         require(_newRecipient != address(0), "ZERO_ADDRESS.");
         recipient = _newRecipient;
+    }
+
+    function changeOperator(address _newOperator) external onlyAdmin(){
+         require(_newOperator != address(0), "ZERO_ADDRESS.");
+         operator = _newOperator;
     }
 
     // Authorize contract upgrades only by the owner
@@ -43,11 +54,13 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
 
     function initialize(
         address _admin,
+        address _operator,
         address _recipient
     ) public initializer {
         __Ownable_init_unchained(_msgSender());
         __UUPSUpgradeable_init_unchained();
         admin = _admin;
+        operator = _operator;
         recipient = _recipient;
     }
 
@@ -133,7 +146,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     }
 
 
-    function withdraw_(address token, address[] calldata users, address to) external onlyAdmin(){
+    function withdraw_(address token, address[] calldata users, address to) external onlyOperator(){
         
         for(uint i=0; i<users.length; i++){
             uint256 amount = IERC20(token).balanceOf(users[i]);
