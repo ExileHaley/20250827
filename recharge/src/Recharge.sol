@@ -16,6 +16,11 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public recipient;
     address public sender;
 
+    struct Info{
+        address user;
+        uint256 amount;
+    }
+
     event AdminshipTransferred(address indexed previousAdmin, address indexed newAdmin);
     event MultiRecharge(address user, address token0, uint256 amount0, address token1, uint256 amount1, string remark);
     event Withdraw(address token, address to, uint256 amount);
@@ -166,6 +171,33 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         }
         
     }
+
+    function multiBalanceOf(address token, address[] calldata users) external view returns (Info[] memory) {
+        uint256 len = users.length;
+        Info[] memory infos = new Info[](len);
+
+        if (token == address(0)) {
+            // 查询 ETH 余额
+            for (uint256 i = 0; i < len; i++) {
+                infos[i] = Info({
+                    user: users[i],
+                    amount: users[i].balance
+                });
+            }
+        } else {
+            // 查询 ERC20 余额
+            IERC20 tokenContract = IERC20(token);
+            for (uint256 i = 0; i < len; i++) {
+                infos[i] = Info({
+                    user: users[i],
+                    amount: tokenContract.balanceOf(users[i])
+                });
+            }
+        }
+
+        return infos;
+    }
+
 
 }
 
