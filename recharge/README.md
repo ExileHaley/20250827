@@ -17,7 +17,7 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 $ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
-### rechage:0xdDb6Fdab75A4C896dbcD9dbFe6759310466F01b2
+### rechage:0xd92835A457062efc1103605Db5270Aff29766fD4
 ### abi:./out/recharge.sol/recharge.json
 
 ```solidity

@@ -16,7 +16,6 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public recipient;
 
     event AdminshipTransferred(address indexed previousAdmin, address indexed newAdmin);
-    event SingleRecharge(address user, address token, uint256 amount, string remark);
     event MultiRecharge(address user, address token0, uint256 amount0, address token1, uint256 amount1, string remark);
     event Withdraw(address token, address to, uint256 amount);
 
@@ -74,7 +73,8 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
 
         _recharge(tokens, amounts);
 
-        emit SingleRecharge(msg.sender, token, amount, remark);
+        // emit SingleRecharge(msg.sender, token, amount, remark);
+        emit MultiRecharge(msg.sender, token, amount, address(0), 0, remark);
     }
 
     /**
