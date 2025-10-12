@@ -17,12 +17,12 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 $ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
-### rechage(SCC):0x69C2504C9B271b985E02e94d7Ac682a069A2cBFF
-### recharge(NVH):
+#### rechage(SCC):0x69C2504C9B271b985E02e94d7Ac682a069A2cBFF
+#### recharge(NVH):
 
-### test(不要使用，仅测试):0x125aCcd5f62d94b0A24E0bBef44fd763b22B077F
+#### test(不要使用，仅测试):0x125aCcd5f62d94b0A24E0bBef44fd763b22B077F
 
-### abi:./out/recharge.sol/recharge.json
+#### abi:./out/recharge.sol/recharge.json
 
 ```solidity
 //单币种充值，token传0地址标识要充值主币，其他地址正常，amount充值的数量，remark标识
