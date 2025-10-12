@@ -12,11 +12,12 @@ contract RechargeScript is Script{
     address public recipient;
     address public sender;
 
+
     function setUp() public {
-        recipient = address(0xD306aC9A106D062796848C208021c3f44624e66a);
-        admin = address(0x7ACe9699725c246C8E26d896903779aCF579A192);
-        operator = address(0x7ACe9699725c246C8E26d896903779aCF579A192);
-        sender = address(0x7ACe9699725c246C8E26d896903779aCF579A192);
+        recipient = address(0xE7744c060Fa5769D0d26254E8fdd2d2089aDEFC2);
+        admin = address(0x7eA30C52C831F5aE32E0B368cb27dDe612dD02F6);
+        operator = address(0xb73Af99710FC10b9167FFE12BEa22Ba61cDc162e);
+        sender = address();
     }
 
     function run() public {
