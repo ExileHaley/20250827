@@ -18,7 +18,7 @@ $ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz -
 ```
 
 #### rechage(SCC):0x69C2504C9B271b985E02e94d7Ac682a069A2cBFF
-#### recharge(NVH):
+#### recharge(NVH):0xCb25a402679b7e09774218747c1834E756b018AB
 
 #### test(不要使用，仅测试):0x125aCcd5f62d94b0A24E0bBef44fd763b22B077F
 
