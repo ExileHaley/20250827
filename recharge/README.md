@@ -12,13 +12,30 @@ $ forge install openzeppelin/openzeppelin-contracts --no-commit --no-git
 $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no-git
 ```
 
-### deploy
+### deploy wallet
 ```shell
 $ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
+### deploy PCN
+```shell
+$ forge script script/PCN.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+```
+
+### build token constructor
+```shell
+$ cast abi-encode "constructor(address)" 0x4605bE06cE69c944e6bc8fAD80eEeD0467867A9c 
+```
+
+### verify token contract
+```shell
+$ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6 0xa3111361fD8a0E373d2472c84f61996B9eC8Aeb6 src/PCN.sol:PCN  --constructor-args 0x0000000000000000000000004605be06ce69c944e6bc8fad80eeed0467867a9c --etherscan-api-key Y43WNBZNXWR5V4AWQKGAQ9RCQEXTUHK88V
+
+```
+
 #### rechage(SCC):0x69C2504C9B271b985E02e94d7Ac682a069A2cBFF
 #### recharge(NVH):0xCb25a402679b7e09774218747c1834E756b018AB
+#### pcn token:0xa3111361fD8a0E373d2472c84f61996B9eC8Aeb6
 
 #### test(不要使用，仅测试):0x125aCcd5f62d94b0A24E0bBef44fd763b22B077F
 
