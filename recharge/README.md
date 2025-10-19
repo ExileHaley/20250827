@@ -37,6 +37,8 @@ $ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6
 #### recharge(NVH):0xCb25a402679b7e09774218747c1834E756b018AB
 #### pcn token:0xa3111361fD8a0E373d2472c84f61996B9eC8Aeb6
 
+#### recharge(NVH version2.0):0x437853274835e6b4B30A13d6726DDbb5AD402E3E
+
 #### test(不要使用，仅测试):0x125aCcd5f62d94b0A24E0bBef44fd763b22B077F
 
 #### abi:./out/recharge.sol/recharge.json

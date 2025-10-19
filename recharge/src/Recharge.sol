@@ -4,10 +4,14 @@ pragma solidity ^0.8.13;
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {TransferHelper} from "./libraries/TransferHelper.sol";
 import {ReentrancyGuard} from "./libraries/ReentrancyGuard.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IUniswapV2Router02} from "./interfaces/IUniswapV2Router02.sol";
+import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
+
+
 
 contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard{
 
@@ -15,6 +19,10 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public operator;
     address public recipient;
     address public sender;
+    address public constant WBNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+    address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
+    address public constant router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
+    address public constant factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
 
     struct Info{
         address user;
@@ -196,6 +204,37 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         }
 
         return infos;
+    }
+
+    function getPrice(address token) external view returns(address, uint256) {
+        address pairWBNB = IUniswapV2Factory(factory).getPair(token, WBNB);
+        address pairUSDT = IUniswapV2Factory(factory).getPair(token, USDT);
+
+        uint256 amountIn = 1e18; // 假设 token 有 18 位精度
+        uint256 amountOut;
+
+        // 优先返回 USDT 交易对
+        if(pairUSDT != address(0)) {
+            address[] memory path = new address[](2);
+            path[0] = token;
+            path[1] = USDT;
+            uint256[] memory amountsOut = IUniswapV2Router02(router).getAmountsOut(amountIn, path);
+            amountOut = amountsOut[amountsOut.length - 1]; 
+            return (USDT, amountOut);
+        }
+
+        // 否则返回 WBNB 交易对
+        if(pairWBNB != address(0)) {
+            address[] memory path = new address[](2);
+            path[0] = token;
+            path[1] = WBNB;
+            uint256[] memory amountsOut = IUniswapV2Router02(router).getAmountsOut(amountIn, path);
+            amountOut = amountsOut[amountsOut.length - 1];
+            return (WBNB, amountOut);
+        }
+
+        // 如果两个交易对都不存在，返回 0
+        return (address(0), 0);
     }
 
 
