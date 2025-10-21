@@ -10,6 +10,7 @@ contract PCNScript is Script{
     address public owner;
 
     function setUp() public {
+        // 代币接收地址和权限地址===>总量10亿枚:0x4605bE06cE69c944e6bc8fAD80eEeD0467867A9c 
         recipient = address(0x4605bE06cE69c944e6bc8fAD80eEeD0467867A9c);
         owner = address(0x4605bE06cE69c944e6bc8fAD80eEeD0467867A9c);
     }

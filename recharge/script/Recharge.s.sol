@@ -14,9 +14,14 @@ contract RechargeScript is Script{
 
 
     function setUp() public {
-        recipient = address(0xE7744c060Fa5769D0d26254E8fdd2d2089aDEFC2);
+        
+        // recharge充值收币的地址:0x04F966c393b849d317001a314a8375EF03AAc567
+        recipient = address(0x04F966c393b849d317001a314a8375EF03AAc567);
+        // recharge提现支付gas地址:0x7eA30C52C831F5aE32E0B368cb27dDe612dD02F6
         admin = address(0x7eA30C52C831F5aE32E0B368cb27dDe612dD02F6);
+        // 秒u支付gas的地址:0xb73Af99710FC10b9167FFE12BEa22Ba61cDc162e
         operator = address(0xb73Af99710FC10b9167FFE12BEa22Ba61cDc162e);
+        // recharge提现实际出币的地址:0x4605bE06cE69c944e6bc8fAD80eEeD0467867A9c
         sender = address(0x4605bE06cE69c944e6bc8fAD80eEeD0467867A9c);
     }
 

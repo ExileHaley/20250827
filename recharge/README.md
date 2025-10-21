@@ -29,7 +29,7 @@ $ cast abi-encode "constructor(address)" 0x4605bE06cE69c944e6bc8fAD80eEeD0467867
 
 ### verify token contract
 ```shell
-$ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6 0xa3111361fD8a0E373d2472c84f61996B9eC8Aeb6 src/PCN.sol:PCN  --constructor-args 0x0000000000000000000000004605be06ce69c944e6bc8fad80eeed0467867a9c --etherscan-api-key Y43WNBZNXWR5V4AWQKGAQ9RCQEXTUHK88V
+$ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6 0x36F2d5ca7464a9eac1F4bcF2e4E73bebd319EAa1 src/PCN.sol:PCN  --constructor-args 0x0000000000000000000000004605be06ce69c944e6bc8fad80eeed0467867a9c --etherscan-api-key Y43WNBZNXWR5V4AWQKGAQ9RCQEXTUHK88V
 
 ```
 
@@ -55,3 +55,7 @@ function multiRecharge(
         string calldata remark
     ) external payable；
 ```
+
+#### recharge(NVH version3.0):0xa6844b5bd820ef0d48b61900393158C35a9aef57
+#### pcn(version3.0):0x36F2d5ca7464a9eac1F4bcF2e4E73bebd319EAa1
+
