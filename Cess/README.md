@@ -91,3 +91,5 @@ function getBalance(address token, address user) external view returns(uint256 a
 
 ### apifox
 submitones 在 Apifox 邀请你加入团队 个人团队 https://app.apifox.com/invite?token=O5UP9xgCe-YuXDZsBVsTT
+
+### 认购合约(Subscribe):0x332cD7637A0d2F3E280271886E004F98A025D4da
