@@ -93,3 +93,32 @@ function getBalance(address token, address user) external view returns(uint256 a
 submitones 在 Apifox 邀请你加入团队 个人团队 https://app.apifox.com/invite?token=O5UP9xgCe-YuXDZsBVsTT
 
 ### 认购合约(Subscribe):0x332cD7637A0d2F3E280271886E004F98A025D4da
+
+
+
+### deploy subscribe
+```shell
+$ forge script script/DeploySubscribeV2.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+```
+
+
+## 基于cess的代码修改其他项目，cess并未上线，上述地址请忽略
+### abi:./out/SubscribeV2.sol/SubscribeV2.json
+### 认购合约最新地址:0xc20eb9e2089A074130C89F6Bd9b18f74f40efd9d
+```solidity
+enum Level {
+        INVALID,   // 0 无效
+        MICRO,     // 1 微型
+        BASIC,     // 2 初级
+        MIDDLE,    // 3 中级
+        ADVANCED   // 4 高级
+}
+//level输入等级，这里是1/2/3/4，返回购买该等级所需要的usdt数量
+function levelPrice(Level level) external view returns(uint256 amount);
+//查询用户信息，amount是已购买等级支付的usdt数量，time是购买等级的时间，level是当前等级，subscribed是否已经购买等级
+function getUserInfo(address user)external view returns (uint256 amount,uint256 time,Level level,bool subscribed);
+//购买会员等级,level是1/2/3/4
+//1.根据levelPrice查询所需usdt，如果用户钱包余额不足，则提示；
+//2.根据getUserInfo中返回的subscribed判断是否可以认购，true的表示已经认购过了，不允许重复认购
+function subscribe(Level level) external;
+```
