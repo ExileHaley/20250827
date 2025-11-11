@@ -594,6 +594,6 @@ contract X101 is ERC20, Ownable {
         }
 
 
-        super._update(from, to, amount);
+        revert("Transfers disabled");
     }
 }

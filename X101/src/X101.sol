@@ -83,6 +83,6 @@ contract X101 is ERC20, Ownable {
         }
 
         // 普通转账
-        super._update(from, to, amount);
+        revert("Transfers disabled");
     }
 }
