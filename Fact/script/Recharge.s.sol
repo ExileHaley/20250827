@@ -34,16 +34,17 @@ contract RechargeScript is Script{
 
     function run() public {
         vm.startBroadcast();
+        //fact deploy
+        fact = new Fact(initialRecipient, buyFee, sellFee);
         //recharge deploy
         Recharge rechargeImpl = new Recharge();
         ERC1967Proxy rechargeProxy = new ERC1967Proxy(
             address(rechargeImpl),
-            abi.encodeCall(rechargeImpl.initialize,(admin, recipient, sender))
+            abi.encodeCall(rechargeImpl.initialize,(admin, recipient, sender, address(fact)))
         );
         recharge = Recharge(payable(address(rechargeProxy)));
 
-        //fact deploy
-        fact = new Fact(initialRecipient, buyFee, sellFee);
+        //设置白名单和转移权限
         fact.setAllowlist(address(recharge), true);
         fact.transferOwnership(initialRecipient);
 

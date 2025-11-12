@@ -19,16 +19,14 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public operator;
     address public recipient;
     address public sender;
-    address public constant FACT = 0x472B135F6E6Db73cF5c5fA2d7e590c8283d1Be78;
+    address public fact;
     address public constant WBNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
     address public constant router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
     address public constant factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
     address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
-
-    address public donation = 0xf8d9fbc9Db44E378C603b45000c81066630EcCd2;
+    address public constant donation = 0xf8d9fbc9Db44E378C603b45000c81066630EcCd2;
     
-
     struct Info{
         address user;
         uint256 amount;
@@ -78,12 +76,14 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     function initialize(
         address _admin,
         address _recipient,
-        address _sender
+        address _sender,
+        address _fact
     ) public initializer {
         __Ownable_init(_msgSender());
         admin = _admin;
         recipient = _recipient;
         sender = _sender;
+        fact = _fact;
     }
 
     function singleRecharge(address token, uint256 amount, string calldata remark) external payable {
@@ -147,7 +147,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
             // -------------------------------
             // 2️⃣ 充值 FACT
             // -------------------------------
-            if (token == FACT) {
+            if (token == fact) {
                 // 从用户转入到本合约
                 TransferHelper.safeTransferFrom(token, msg.sender, address(this), amount);
 
@@ -176,16 +176,16 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
             uint256 bnbForRecipient = totalETHRequired - bnbForSwap;
 
             // swap 30% BNB -> FACT
-            uint256 beforeBalance = IERC20(FACT).balanceOf(address(this));
+            uint256 beforeBalance = IERC20(fact).balanceOf(address(this));
             swap(bnbForSwap);
-            uint256 afterBalance = IERC20(FACT).balanceOf(address(this));
+            uint256 afterBalance = IERC20(fact).balanceOf(address(this));
             uint256 factReceived = afterBalance - beforeBalance;
 
             if (factReceived > 0) {
                 uint256 donateAmount = (factReceived * 30) / 100;
                 uint256 burnAmount = factReceived - donateAmount;
-                TransferHelper.safeTransfer(FACT, donation, donateAmount);
-                TransferHelper.safeTransfer(FACT, DEAD, burnAmount);
+                TransferHelper.safeTransfer(fact, donation, donateAmount);
+                TransferHelper.safeTransfer(fact, DEAD, burnAmount);
             }
 
             // 剩余 70% BNB 转给 recipient
@@ -274,7 +274,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     function swap(uint256 amountBNB) internal {
         address[] memory path = new address[](2);
         path[0] = WBNB;
-        path[1] = FACT;
+        path[1] = fact;
         IUniswapV2Router02(router).swapExactETHForTokensSupportingFeeOnTransferTokens{value: amountBNB}(
             0, 
             path, 
