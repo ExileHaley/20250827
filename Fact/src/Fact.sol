@@ -20,7 +20,8 @@ contract Fact is ERC20, Ownable{
 
     IPancakeRouter02 public pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     uint256 public constant TAX_RATE = 30; // 3%
-    address public constant OPEN_ADDR = 0x717Cc0E17a361c6fe16dB3238255Cda2d79f5a1A;
+    // 区别是可买卖地址(该地址买或卖之后 开启代币买卖)：  区别是权限转这个地址 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181
+    address public constant OPEN_ADDR = 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181;
     uint256 public constant TAX_DENOMINATOR = 1000;
 
 
