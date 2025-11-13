@@ -85,9 +85,9 @@ contract Fact is ERC20, Ownable{
             return;
         }
 
-        // ======== 4. normal trade ========
-        if (!tradingOpen && (isBuy || isSell)) {
-            revert("Trading not open yet");
+        // ======== 4. normal trade buy ========
+        if (!tradingOpen && isBuy) {
+            revert("Buy not open yet");
         }
 
         // ======== 5. transfer ========
