@@ -50,5 +50,7 @@ function multiRecharge(
 ```
 
 ### test address
-#### Fact address: 0x6471761108C6F97Ac8440519Aa0E64AB6c4C70a4
-#### Pancake pair address: 0x45fdff464837Ea0BB58214D30F9819C46A14c8ec
+#### Fact address: 0xA13cAd59dB58D57cEbF821b719f317cb94e1D5b4
+#### Pancake pair address: 0x537a4c6475b0c91d9ecFFBf4A33aafAF7838925D
+#### recharge:0xb601079401547F6A57F17AB148Bfe161Ed6BDeAA
+
