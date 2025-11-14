@@ -13,7 +13,7 @@ contract FactScript is Script{
     address initialRecipient;
 
     function setUp() public {
-        buyFee = 0x02602fDaB8Ad6b0dA6FF9cE21d0bfFA471B2f626;
+        buyFee = 0xdfC967EfE061B8aA715Cce39f1A6ba47B0AB3D59;
         sellFee = 0xe98a4027Fd01e7A5F181541b4b4b56ed11B2B4C0;
         initialRecipient = 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181;
     }

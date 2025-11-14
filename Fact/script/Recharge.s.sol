@@ -23,11 +23,11 @@ contract RechargeScript is Script{
     function setUp() public {
         //recharge data init
         admin = address(0x39BD0a3E2c70CeE992B11F5Ca12f10489a53C53D);
-        recipient = address(0x02602fDaB8Ad6b0dA6FF9cE21d0bfFA471B2f626);
+        recipient = address(0xdfC967EfE061B8aA715Cce39f1A6ba47B0AB3D59);
         sender = address(0x19621484D92031BfcDA0DE53920B25FE514A3c12);
 
         //fact data init 
-        buyFee = 0x02602fDaB8Ad6b0dA6FF9cE21d0bfFA471B2f626;
+        buyFee = 0xdfC967EfE061B8aA715Cce39f1A6ba47B0AB3D59;
         sellFee = 0xe98a4027Fd01e7A5F181541b4b4b56ed11B2B4C0;
         initialRecipient = 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181;
     }
