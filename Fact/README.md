@@ -49,7 +49,6 @@ function multiRecharge(
     ) external payable；
 ```
 
-### test address
 #### Fact address:0x087b767350Be8be45b59cBd5ea794C23002Aa38D
 #### Pancake pair address:0x1dF1452589333B332cbB83D3f94e647Cc29aB174
 #### recharge:0xA03Abb04C22c440964E47be7013EcB64d76D5561
