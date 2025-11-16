@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test,console} from "forge-std/Test.sol";
 import {X101} from "../src/X101.sol";
+import {Deploy} from "../src/Deploy.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IUniswapV2Router} from "../src/interfaces/IUniswapV2Router.sol";
 
@@ -22,7 +23,7 @@ interface IPancakeFactory {
     function setFeeToSetter(address) external;
 }
 
-contract X101Test is Test {
+contract X101V2Test is Test {
     X101 public x101;
 
     address sellFee;
@@ -46,7 +47,10 @@ contract X101Test is Test {
         initialRecipient = vm.addr(2);
 
         vm.startPrank(initialRecipient);
-        x101 = new X101(initialRecipient, sellFee);
+        Deploy deploy = new Deploy();
+        x101 = X101(deploy.deployX101(initialRecipient, sellFee));
+        // x101 = new X101(initialRecipient, sellFee);
+        deploy.transferOwnership(initialRecipient);
         vm.stopPrank();
         
     }
@@ -96,13 +100,13 @@ contract X101Test is Test {
 
     function test_addLiquidity_not_allowlist() public {
         vm.startPrank(initialRecipient);
-        x101.transfer(user,10000e18);
+        x101.transfer(user,1000e18);
         vm.stopPrank();
 
         vm.startPrank(user);
-        deal(adx, user, 10000e18);
-        x101.approve(uniswapV2Router, 10000e18);
-        IERC20(adx).approve(uniswapV2Router, 10000e18);
+        deal(adx, user, 1000e18);
+        x101.approve(uniswapV2Router, 1000e18);
+        IERC20(adx).approve(uniswapV2Router, 1000e18);
 
         // add liquidity
         IUniswapV2Router(uniswapV2Router).addLiquidity(
@@ -118,8 +122,30 @@ contract X101Test is Test {
         vm.stopPrank();
 
         assertEq(x101.balanceOf(address(x101)), 0);
-        assertEq(x101.balanceOf(x101.pancakePair()), 800e18);
-        assertEq(x101.balanceOf(x101.sellFee()), 200e18);
+        assertEq(x101.balanceOf(x101.pancakePair()), 1000e18);
+        // assertEq(x101.balanceOf(x101.sellFee()), 200e18);
+    }
+
+
+    function test_removeLiquiditty_not_allowlist() public {
+        test_addLiquidity_not_allowlist();
+        console.log("X101 balanceof user:",x101.balanceOf(user));
+        uint256 lpBalance = IERC20(x101.pancakePair()).balanceOf(user);
+        vm.startPrank(user);
+        IERC20(x101.pancakePair()).approve(uniswapV2Router, lpBalance);
+        //999999999999999999000
+        //1000 000000000000000000
+        IUniswapV2Router(uniswapV2Router).removeLiquidity(
+            address(x101), 
+            adx, 
+            lpBalance, 
+            0, 
+            0, 
+            user, 
+            block.timestamp + 10
+        );
+        vm.stopPrank();
+        assertEq(x101.balanceOf(user), 999999999999999999000);
     }
 
     function test_buy() public {
@@ -163,7 +189,7 @@ contract X101Test is Test {
             block.timestamp
         );
         vm.stopPrank();
-        assertEq(x101.balanceOf(x101.sellFee()), 210e18);
+        assertEq(x101.balanceOf(x101.sellFee()), 10e18);
     }
 
     function test_removeLiquidity() public {

@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script,console} from "forge-std/Script.sol";
 import {X101} from "../src/X101.sol";
+import {Deploy} from "../src/Deploy.sol";
 
 
 contract X101Script is Script{
@@ -17,8 +18,11 @@ contract X101Script is Script{
     function run() public {
 
         vm.startBroadcast();
-        x101 = new X101(initialRecipient, sellFee);
-        x101.transferOwnership(initialRecipient);
+        Deploy deploy = new Deploy();
+        x101 = X101(deploy.deployX101(initialRecipient, sellFee));
+        deploy.transferOwnership(initialRecipient);
+        // x101 = new X101(initialRecipient, sellFee);
+        // x101.transferOwnership(initialRecipient);
         vm.stopBroadcast();
 
         console.log("X101 address:", address(x101));
