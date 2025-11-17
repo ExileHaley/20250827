@@ -9,8 +9,21 @@
 
 
 
-### deploy
+### install foundry-rs/forge-std
 ```shell
-$ forge script script/X101.s.sol -vvv --rpc-url=https://rpc.naaidepin.co --broadcast --private-key=[privateKey]
+$ forge install foundry-rs/forge-std --no-commit --no-git
+```
+### install openzeppelin-contracts
+```shell
+$ forge install openzeppelin/openzeppelin-contracts --no-commit --no-git
 ```
 
+### install openzeppelin-contracts-upgradeable
+```shell
+$ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no-git
+```
+
+### deploy wallet
+```shell
+$ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+```
