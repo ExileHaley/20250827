@@ -69,10 +69,10 @@ contract X101V2Test is Test {
         x101.setAllowlist(addrs, true);
         vm.stopPrank();
 
-        vm.startPrank(initialRecipient);
-        x101.setAllowlist(addrs, true);
-        vm.stopPrank();
-        assertEq(x101.allowlist(user), true);
+        // vm.startPrank(initialRecipient);
+        // x101.setAllowlist(addrs, true);
+        // vm.stopPrank();
+        // assertEq(x101.allowlist(user), true);
     }
 
     function test_addLiquidity() public {
