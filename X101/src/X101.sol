@@ -45,20 +45,18 @@ contract X101 is ERC20, Ownable {
 
         _mint(_initialRecipient, 1_010_000 ether);
 
-        address[] memory addrs = new address[](2);
-        addrs[0] = _initialRecipient;
-        addrs[1] = _sellFee;
-        setAllowlist(addrs, true);
+        setAllowlist(_initialRecipient, true);
+        setAllowlist(_sellFee, true);
         require(address(this) > ADX, "DEPLOY_ERROR.");
     }
 
-    function setAllowlist(address[] memory addrs, bool isAllow) public onlyOwner {
-        for (uint256 i = 0; i < addrs.length; i++) {
-            allowlist[addrs[i]] = isAllow;
-        }
+    function setAllowlist(address addr, bool isAllow) public onlyOwner {
+        require(addr != address(0), "INVALID_ADDRESS.");
+        allowlist[addr] = isAllow;
     }
 
     function setSellFee(address _sellFee) external onlyOwner{
+        require(_sellFee != address(0), "INVALID_ADDRESS.");
         sellFee = _sellFee;
     }
 

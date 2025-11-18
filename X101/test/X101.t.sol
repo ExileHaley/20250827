@@ -56,8 +56,7 @@ contract X101V2Test is Test {
     }
 
     function test_setAllowlist() public {
-        address[] memory addrs = new address[](1);
-        addrs[0] = user;
+        
         // error OwnableUnauthorizedAccount(address account);
         vm.startPrank(user);
         vm.expectRevert(
@@ -66,7 +65,7 @@ contract X101V2Test is Test {
                 user
             )
         );
-        x101.setAllowlist(addrs, true);
+        x101.setAllowlist(user, true);
         vm.stopPrank();
 
         // vm.startPrank(initialRecipient);

@@ -4,8 +4,9 @@
 ------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------
 
-### X101 token address:0xdf26233780Bc95Dd7A0D71801A0E4226cF05671a(代币地址)
-### pancakePair:0xB61707E57d4CfADE074343f22490200F0056BC96(和ADX的池子地址)
+### X101 token address:0xCC37e50de109483EEdd2dF40557365e3A0D11b62(代币地址)
+### pancakePair:0xc9C1B863c46db8080DbA3c618d0a81f142Ac6e50(和ADX的池子地址)
+### recharge:0x4Bd252eD923de7B026d3cd0962487bB138294C75
 
 
 
@@ -25,5 +26,6 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 
 ### deploy wallet
 ```shell
-$ forge script script/X101.s.sol -vvv --rpc-url=https://rpc.naaidepin.co --broadcast --private-key=[privateKey]
+$ forge script script/Deploy.s.sol -vvv --rpc-url=https://rpc.naaidepin.co --broadcast --private-key=[privateKey]
 ```
+

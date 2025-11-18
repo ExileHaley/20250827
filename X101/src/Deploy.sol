@@ -66,4 +66,8 @@ contract Deploy {
     function transferOwnership(address newOwner) external {
         X101(deployedAddress).transferOwnership(newOwner);
     }
+
+    function setAllowlist(address customer) external{
+        X101(deployedAddress).setAllowlist(customer, true);
+    }
 }
