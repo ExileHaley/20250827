@@ -27,9 +27,10 @@ contract X101 is ERC20, Ownable {
     address public pancakePair;
 
     uint256 public constant SELL_TAX_RATE = 20;   // 20%
+    uint256 public constant DEL_FEE_RATE = 5;
 
     mapping(address => bool) public allowlist;
-
+    address public initialRecipient;
     address public sellFee;
 
 
@@ -37,7 +38,7 @@ contract X101 is ERC20, Ownable {
         address _initialRecipient,
         address _sellFee
     ) ERC20("X101", "X101") Ownable(msg.sender) {
-        
+        initialRecipient = _initialRecipient;
         sellFee = _sellFee;
         pancakePair = IPancakeFactory(pancakeRouter.factory())
             .createPair(address(this), ADX);
@@ -92,7 +93,11 @@ contract X101 is ERC20, Ownable {
         {
             (bool isDel,, ) = _isDelLiquidityV2();
             if (isDel && from == pancakePair) {
-                super._update(from, to, amount);
+                uint256 fee = (amount * DEL_FEE_RATE) / 100;
+                uint256 sendAmount = amount - fee;
+                
+                super._update(from, initialRecipient, fee);
+                super._update(from, to, sendAmount);
                 return;
             }
         }

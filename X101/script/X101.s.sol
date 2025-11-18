@@ -11,7 +11,7 @@ contract X101Script is Script{
     address sellFee;
     address initialRecipient;
     function setUp() public {
-        initialRecipient = 0xD306aC9A106D062796848C208021c3f44624e66a;
+        initialRecipient = 0xe75AFCFcc7c5E06650fC0A433Dcc2E18cF5A7E38;
         // initialRecipient = 0x3862120B1570c5D0285d15c9E0A6a38DdCf6569A;
         sellFee = 0xd6ccB8aB9351C3656063308ceF9eCE1Dc8C5b3d6;
     }
