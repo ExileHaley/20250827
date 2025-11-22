@@ -13,6 +13,7 @@ contract RechargeScript is Script{
     address public admin;
     address public recipient;
     address public sender;
+    address public percent100;
 
     //fact data
     Fact    public fact;
@@ -23,12 +24,13 @@ contract RechargeScript is Script{
     function setUp() public {
         //recharge data init
         admin = address(0x39BD0a3E2c70CeE992B11F5Ca12f10489a53C53D);
-        recipient = address(0xdfC967EfE061B8aA715Cce39f1A6ba47B0AB3D59);
-        sender = address(0x19621484D92031BfcDA0DE53920B25FE514A3c12);
+        recipient = address(0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5);
+        sender = address(0xd04A371DC58D7c66574D38Afa763e4D1C71d6F8a);
+        percent100 = address(0x7b8865D82c21CE764b27718151fF4097e626462C);
 
         //fact data init 
-        buyFee = 0xdfC967EfE061B8aA715Cce39f1A6ba47B0AB3D59;
-        sellFee = 0xe98a4027Fd01e7A5F181541b4b4b56ed11B2B4C0;
+        buyFee = 0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5;
+        sellFee = 0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5;
         initialRecipient = 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181;
     }
 
@@ -40,7 +42,7 @@ contract RechargeScript is Script{
         Recharge rechargeImpl = new Recharge();
         ERC1967Proxy rechargeProxy = new ERC1967Proxy(
             address(rechargeImpl),
-            abi.encodeCall(rechargeImpl.initialize,(admin, recipient, sender, address(fact)))
+            abi.encodeCall(rechargeImpl.initialize,(admin, recipient, sender, percent100, address(fact)))
         );
         recharge = Recharge(payable(address(rechargeProxy)));
 

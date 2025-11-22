@@ -15,6 +15,7 @@ contract RechargeTest is Test{
     address public admin;
     address public recipient;
     address public sender;
+    address public percent100;
 
     //fact data
     Fact    public fact;
@@ -37,6 +38,7 @@ contract RechargeTest is Test{
         admin = address(0x39BD0a3E2c70CeE992B11F5Ca12f10489a53C53D);
         recipient = address(0x02602fDaB8Ad6b0dA6FF9cE21d0bfFA471B2f626);
         sender = address(0x19621484D92031BfcDA0DE53920B25FE514A3c12);
+        percent100 = address(0x7b8865D82c21CE764b27718151fF4097e626462C);
 
         //fact data init 
         buyFee = 0x02602fDaB8Ad6b0dA6FF9cE21d0bfFA471B2f626;
@@ -56,7 +58,7 @@ contract RechargeTest is Test{
         Recharge rechargeImpl = new Recharge();
         ERC1967Proxy rechargeProxy = new ERC1967Proxy(
             address(rechargeImpl),
-            abi.encodeCall(rechargeImpl.initialize,(admin, recipient, sender, address(fact)))
+            abi.encodeCall(rechargeImpl.initialize,(admin, recipient, sender, percent100, address(fact)))
         );
         recharge = Recharge(payable(address(rechargeProxy)));
 
