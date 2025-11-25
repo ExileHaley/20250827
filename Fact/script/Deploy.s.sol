@@ -7,7 +7,7 @@ import {Fact} from "../src/Fact.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 
-contract RechargeScript is Script{
+contract DeployScript is Script{
     //recharge data
     Recharge public recharge;
     address public admin;
@@ -26,7 +26,7 @@ contract RechargeScript is Script{
         admin = address(0x39BD0a3E2c70CeE992B11F5Ca12f10489a53C53D);
         recipient = address(0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5);
         sender = address(0xd04A371DC58D7c66574D38Afa763e4D1C71d6F8a);
-        percent100 = address(0x7b8865D82c21CE764b27718151fF4097e626462C);
+        percent100 = address(0x460784363f5C7945Fd3dD9880d0Ad5b54d2295D2);
 
         //fact data init 
         buyFee = 0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5;

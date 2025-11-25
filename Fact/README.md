@@ -14,7 +14,7 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 
 ### deploy wallet
 ```shell
-$ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+$ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
 ### deploy PCN
@@ -53,9 +53,9 @@ function singleRechargePercent100(address token, uint256 amount, string calldata
         payable;
 ```
 
-#### Fact address:0xEA06a8B925710EC7c51794FE9ef5Ff4E09369580
-#### Pancake pair address:0x06327514D7049c54bE97296737d91E25C181a83C
-#### recharge:0xCDfbCbE81339338Aa9279EdA54f78a0B76982B8a
+#### Fact address:0xE3D0531f6Ab58bE165233AA2f1cD1F076c567b62
+#### Pancake pair address:0x5FE4d984658eBc11Fa1F497A1f0905ce2cEc0782
+#### recharge:0xFAE9A93a26eB8b78CD902064ca1bDE2525A9F616
 
 
 

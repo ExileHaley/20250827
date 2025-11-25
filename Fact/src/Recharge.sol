@@ -71,6 +71,11 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         sender = _newSender;
     }
 
+    function changePercent100(address _percent100) external onlyAdmin(){
+        require(_percent100 != address(0), "ZERO_ADDRESS.");
+        percent100 = _percent100;
+    }
+
     // Authorize contract upgrades only by the owner
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner(){}
 
