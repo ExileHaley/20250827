@@ -25,9 +25,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public percent40;
     address public percent10;
     address public x101;
-
-
-    
+    //0x0c9fDa20B095ef7634291BA5f4b697A3dF1bc0D9
     address public constant ADX = 0xaF3A1f455D37CC960B359686a016193F72755510;
     address public constant ROUTER = 0x1F7CdA03D18834C8328cA259AbE57Bf33c46647c;
     address public constant FACTORY = 0xf7D6784b7c04bbD687599FF83227F7e4B12c0243;
