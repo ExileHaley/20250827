@@ -31,8 +31,9 @@ contract RechargeDstScript is Script{
             abi.encodeCall(rechargeImpl.initialize,(admin, percent50, percent38, percent12, sender))
         );
         recharge = RechargeDst(payable(address(rechargeProxy)));
+        (address token,uint256 price) = recharge.getPrice(dst);
         vm.stopBroadcast();
         console.log("recharge dst deployed at:",address(recharge));
-        console.log("get price:",recharge.getPrice(token););
+        console.log("get price:",price);
     }
 }
