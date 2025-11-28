@@ -24,13 +24,13 @@ contract DeployScript is Script{
     function setUp() public {
         //recharge data init
         admin = address(0x39BD0a3E2c70CeE992B11F5Ca12f10489a53C53D);
-        recipient = address(0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5);
+        recipient = address(0x79595837f177686ef6260AC69a6Bad529fFf2E45);
         sender = address(0xd04A371DC58D7c66574D38Afa763e4D1C71d6F8a);
-        percent100 = address(0x460784363f5C7945Fd3dD9880d0Ad5b54d2295D2);
+        percent100 = address(0x7A90f4A9DEf5350B9fAEdDb69D8bb5e96A2cA68B);
 
         //fact data init 
-        buyFee = 0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5;
-        sellFee = 0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5;
+        buyFee = 0x8Da8FA6a5FfDe11Bb9C3A601609625E8eF4716D8;
+        sellFee = 0x8Da8FA6a5FfDe11Bb9C3A601609625E8eF4716D8;
         initialRecipient = 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181;
     }
 

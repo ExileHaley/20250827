@@ -24,12 +24,12 @@ $ forge script script/Fact.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --bro
 
 ### build token constructor
 ```shell
-$ cast abi-encode "constructor(address,address,address)" 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181 0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5 0xbA06d6F5A24E2dB7D03F47608Ad3f24Cb7b3B3c5 
+$ cast abi-encode "constructor(address,address,address)" 0x3D1f8Da9523f66F7b766b1d3f9502220Db90c181 0x8Da8FA6a5FfDe11Bb9C3A601609625E8eF4716D8 0x8Da8FA6a5FfDe11Bb9C3A601609625E8eF4716D8 
 ```
 
 ### verify token contract
 ```shell
-$ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6 0x087b767350Be8be45b59cBd5ea794C23002Aa38D src/Fact.sol:Fact  --constructor-args 0x0000000000000000000000003d1f8da9523f66f7b766b1d3f9502220db90c181000000000000000000000000ba06d6f5a24e2db7d03f47608ad3f24cb7b3b3c5000000000000000000000000ba06d6f5a24e2db7d03f47608ad3f24cb7b3b3c5 --etherscan-api-key Y43WNBZNXWR5V4AWQKGAQ9RCQEXTUHK88V
+$ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6 0x777924236Fb8F6e3756cbfd1A99ca84a4aff6984 src/Fact.sol:Fact  --constructor-args 0x0000000000000000000000003d1f8da9523f66f7b766b1d3f9502220db90c1810000000000000000000000008da8fa6a5ffde11bb9c3a601609625e8ef4716d80000000000000000000000008da8fa6a5ffde11bb9c3a601609625e8ef4716d8 --etherscan-api-key Y43WNBZNXWR5V4AWQKGAQ9RCQEXTUHK88V
 
 ```
 
@@ -53,9 +53,9 @@ function singleRechargePercent100(address token, uint256 amount, string calldata
         payable;
 ```
 
-#### Fact address:0xE3D0531f6Ab58bE165233AA2f1cD1F076c567b62
-#### Pancake pair address:0x5FE4d984658eBc11Fa1F497A1f0905ce2cEc0782
-#### recharge:0xFAE9A93a26eB8b78CD902064ca1bDE2525A9F616
+#### Fact address:0x777924236Fb8F6e3756cbfd1A99ca84a4aff6984
+#### Pancake pair address:0xba054689f719B7D496502f6700C2Cea6a3107ff9
+#### recharge:0x7670f7730EFFB82ef10FAf29eC4EC4bf9338D8C3
 
 
 
