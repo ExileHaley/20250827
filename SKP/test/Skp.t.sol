@@ -12,8 +12,6 @@ contract SkpTest is Test{
     Skp public skp;
     address initialRecipient;
     address sellFee;
-    address buyBackWallet;
-    address attributableTo;
 
     address user;
     address user1;
@@ -32,25 +30,12 @@ contract SkpTest is Test{
         //init address
         initialRecipient = vm.addr(1);
         sellFee = vm.addr(2);
-        buyBackWallet = vm.addr(3);
-        attributableTo = vm.addr(4);
-
-        user = vm.addr(1);
-        initialRecipient = vm.addr(2);
-        attributableTo = vm.addr(4);
-        buyBackWallet = vm.addr(5);
-
         user = vm.addr(6);
         user1 = vm.addr(7);
 
 
         vm.startPrank(initialRecipient);
-        skp = new Skp(initialRecipient, sellFee, buyBackWallet, attributableTo);
-        vm.stopPrank();
-
-        vm.startPrank(buyBackWallet);
-        deal(USDT, buyBackWallet, 1000000000e18);
-        IERC20(USDT).approve(address(skp), 1000000000e18);
+        skp = new Skp(initialRecipient, sellFee);
         vm.stopPrank();
 
         addLiquidity_allowlist();
@@ -64,8 +49,8 @@ contract SkpTest is Test{
         IERC20(USDT).approve(uniswapV2Router, 10000e18);
 
         IUniswapV2Router02(uniswapV2Router).addLiquidity(
-            USDT, 
             address(skp), 
+            USDT, 
             10000e18, 
             10000e18, 
             0, 
@@ -97,7 +82,7 @@ contract SkpTest is Test{
         );
         vm.stopPrank();
         console.log("usdt balance of sell fee:",IERC20(USDT).balanceOf(sellFee));
-        console.log("skp balance of attributableTo:",skp.balanceOf(attributableTo));
+
     }
 
 }
