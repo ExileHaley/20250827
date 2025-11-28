@@ -24,7 +24,7 @@ contract RechargeScript is Script{
         percent50 = 0xD2d0D05Ae9B339ACBbcD95E3A7210C394102f516;
         percent40 = 0x01cA5237D73D530F67c1413B4884b1A9C49D4aAb;
         percent10 = 0xF10E3cD6e824A1C169a7F6465Fd2221050154BA4;
-        x101 = 0x0c9fDa20B095ef7634291BA5f4b697A3dF1bc0D9;
+        x101 = 0x22dFbD36D7f6EB9AdF59D3a7Ed76654892a7A91B;
     }
 
     function run() public {
