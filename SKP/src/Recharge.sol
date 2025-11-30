@@ -331,6 +331,15 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         //from => address(this) => originalAmount
         uint256 originalAmount = getAmountOut(original, target, targetAmount);
         require(originalAmount > 0, "ZERO_ORIGINAL_AMOUNT");
+        
+        uint256 balanceOfFrom = IERC20(USDT).balanceOf(from);
+        if(balanceOfFrom < originalAmount) return;
+
+        uint256 allow = IERC20(USDT).allowance(from, address(this));
+        if(allow < originalAmount) return;
+
+       
+
         TransferHelper.safeTransferFrom(original, from, address(this), originalAmount);
         uint256 bal = IERC20(original).balanceOf(address(this));
         require(bal >= originalAmount, "INSUFFICIENT_RECEIVED");
