@@ -28,11 +28,11 @@ contract DeployScript is Script{
 
     function setUp() public {
         //recharge param init
-        admin = ; //modfiy
+        admin = 0xD306aC9A106D062796848C208021c3f44624e66a; //modfiy
 
         recipient = 0x438003F621cB1bfE2a1FB7DFE02962b0455e5675;
 
-        sender = ; //modfiy
+        sender = 0xD306aC9A106D062796848C208021c3f44624e66a; //modfiy
 
         percent50 = 0x438003F621cB1bfE2a1FB7DFE02962b0455e5675;
         percent30 = 0xeC94798493243C69Dc627770E4f3edCFD1f78bE0;
@@ -42,7 +42,8 @@ contract DeployScript is Script{
         buyBackPercent2 = 0xAF84D6a073bBbc678899671b9BA3669811018982;
 
         //skp param init
-        initialRecipient = 0xD4360fAE9a810Be17b5fC1edF12849675996f712;
+        // initialRecipient = 0xD4360fAE9a810Be17b5fC1edF12849675996f712;
+        initialRecipient = 0xD306aC9A106D062796848C208021c3f44624e66a;
         sellFee = 0x73832D01364c48e4b6C49B9ECBF07aB92852B67c;
     }
 
