@@ -14,7 +14,7 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 
 ### deploy wallet
 ```shell
-$ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+$ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey] --slow
 ```
 
 #### abi:./out/recharge.sol/recharge.json
@@ -32,8 +32,8 @@ function multiRecharge(
     ) external payable；
 ```
 
-### SKP token address:0xdd334B844066941AEe8c5e2b324E62bE7AAe1b3d
-### pancake pair address:0x8b1A9A87f9bb82345F52e2bC8EFF17967D542944
-### recharge address:0x3EcBceBE0346f7B2e2Ab2B176ec86E766Dcedf2b
-### test hash:
+### SKP token address:0x7613a05df6B27B313371D9986Cf88970b0243411
+### pancake pair address:0x8f312d9768386B5248618d5DF08ac304fCF6344d
+### recharge address:0xC8Ef75874e33e01FdAC3dEA1c69A123594d9080B
+
 
