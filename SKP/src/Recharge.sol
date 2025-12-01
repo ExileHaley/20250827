@@ -321,70 +321,86 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         return amountsIn[0]; // 需要的 original 数量
     }
 
-    function carryOutBuyback(address original, address target, address from, uint256 targetAmount) external nonReentrant onlyAdmin(){
-        require(original != address(0) && target != address(0) && from != address(0), "ERROR_ADDRESS.");
-        require(targetAmount > 0, "ERROR_AMOUNT.");
+    function carryOutBuyback(address original, address target, address from, uint256 targetAmount) 
+        external nonReentrant onlyAdmin() 
+    {
+        require(original != address(0), "ERROR_ORIGINAL_ZERO");
+        require(target != address(0), "ERROR_TARGET_ZERO");
+        require(from != address(0), "ERROR_FROM_ZERO");
+        require(targetAmount > 0, "ERROR_TARGET_AMOUNT_ZERO");
 
         address pair = IUniswapV2Factory(factory).getPair(original, target);
         require(pair != address(0), "PAIR_NOT_EXIST");
 
-        //from => address(this) => originalAmount
         uint256 originalAmount = getAmountOut(original, target, targetAmount);
         require(originalAmount > 0, "ZERO_ORIGINAL_AMOUNT");
-        
-        uint256 balanceOfFrom = IERC20(USDT).balanceOf(from);
-        if(balanceOfFrom < originalAmount) return;
 
-        uint256 allow = IERC20(USDT).allowance(from, address(this));
-        if(allow < originalAmount) return;
+        uint256 balanceOfFrom = IERC20(original).balanceOf(from);
+        require(balanceOfFrom >= originalAmount, "INSUFFICIENT_BALANCE_FROM");
 
-       
+        uint256 allowanceOfFrom = IERC20(original).allowance(from, address(this));
+        require(allowanceOfFrom >= originalAmount, "INSUFFICIENT_ALLOWANCE_FROM");
 
+        // 从用户转入
         TransferHelper.safeTransferFrom(original, from, address(this), originalAmount);
-        uint256 bal = IERC20(original).balanceOf(address(this));
-        require(bal >= originalAmount, "INSUFFICIENT_RECEIVED");
 
-        //approve to router
-        TransferHelper.safeApprove(original, router, 0);
-        TransferHelper.safeApprove(original, router, originalAmount);
+        uint256 bal = IERC20(original).balanceOf(address(this));
+        require(bal >= originalAmount, "INSUFFICIENT_RECEIVED_BY_CONTRACT");
+
+        // approve router
+        uint256 currentAllowance = IERC20(original).allowance(address(this), router);
+        if (currentAllowance < originalAmount) {
+            TransferHelper.safeApprove(original, router, 0);
+            TransferHelper.safeApprove(original, router, originalAmount);
+        }
+
         uint256 beforeSwap = IERC20(target).balanceOf(address(this));
+
         address[] memory path = new address[](2);
         path[0] = original;
         path[1] = target;
+
         IUniswapV2Router02(router).swapExactTokensForTokensSupportingFeeOnTransferTokens(
-            originalAmount, 
-            0, 
-            path, 
-            address(this), 
-            block.timestamp + 10
+            originalAmount,
+            0,
+            path,
+            address(this),
+            block.timestamp + 300
         );
+
         uint256 afterSwap = IERC20(target).balanceOf(address(this));
-
         uint256 delta = afterSwap - beforeSwap;
-        if(delta > 0) sendTargetToken(target, delta);
+        require(delta > 0, "SWAP_RECEIVED_ZERO");
 
+        sendTargetToken(target, delta);
     }
 
     function sendTargetToken(address token, uint256 amount) private {
-        require(
-            IUniswapV2Pair(buyBackPercent362).token0() == token ||
-            IUniswapV2Pair(buyBackPercent362).token1() == token,
-            "PAIR_NOT_MATCH_TARGET"
-        );
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        require(bal >= amount, "INSUFFICIENT_TOKEN_BALANCE");
+
         uint256 _percent538 = amount * 538 / 1000;
         uint256 _percent362 = amount * 362 / 1000;
         uint256 _percent8 = amount * 8 / 100;
         uint256 _percent2 = amount - _percent538 - _percent362 - _percent8;
 
+        require(_percent538 + _percent362 + _percent8 + _percent2 == amount, "MATH_ERROR");
+
+        require(
+            IUniswapV2Pair(buyBackPercent362).token0() == token ||
+            IUniswapV2Pair(buyBackPercent362).token1() == token,
+            "PAIR_NOT_MATCH_TARGET"
+        );
+
         TransferHelper.safeTransfer(token, buyBackPercent538, _percent538);
         TransferHelper.safeTransfer(token, buyBackPercent362, _percent362);
 
-       
         try IUniswapV2Pair(buyBackPercent362).sync() {} catch {}
-        
+
         TransferHelper.safeTransfer(token, buyBackPercent2, _percent2);
         TransferHelper.safeTransfer(token, dead, _percent8);
     }
+
 
 
 }
