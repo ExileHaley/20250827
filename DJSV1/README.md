@@ -23,12 +23,12 @@ $ cast nonce [wallet-address] --rpc-url https://bsc.blockrazor.xyz
 ```
 
 
-### recharge:0x24ff628a178ABd50917284B0FE872Cc8AfB5D8F4
+### recharge:0xA367567b02FBd0aB7852b80F34f53213bC58e579
 ### abi:./out/recharge.sol/recharge.json
 ### recharge func list:
 ```solidity
 //入金是一个固定值500usdt,这个函数会返回500u的固定值,有精度18
-function MAX_REFERRAL_DEPTH() external view returns(uint256);
+function FIXED_AMOUNT() external view returns(uint256);
 //获取全网共计入金数量(usdt)，有精度18
 function totalPerformance() external view returns(uint256);
 //获取全网参与地址，包括充值和未充值的，返回一个地址数组
