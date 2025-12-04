@@ -181,5 +181,8 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         return addrCollection.length;
     }
 
-    
+    function validInvitationCode(address user) external view returns(bool){
+        if(user == initialCode) return true;
+        else return userInfo[user].recommender != address(0);
+    }
 }

@@ -14,9 +14,16 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 
 ### deploy wallet
 ```shell
-$ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+$ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
-### recharge:
+
+### 查看未执行执行nonce
+```shell
+$ cast nonce [wallet-address] --rpc-url https://bsc.blockrazor.xyz
+```
+
+
+### recharge:0x691f5994593965746eD9dB5b5e473BaC5953Bdef
 ### abi:./out/recharge.sol/recharge.json
 ### recharge func list:
 ```solidity
@@ -50,6 +57,7 @@ function getUserInfo(address user)
         );
 //获取全网参与的总人数，没有精度
 function getAddrCollectionLength() external view returns(uint);
-
+//判断当前地址是否拥有邀请资格
+function validInvitationCode(address user) external view returns(bool);
 
 ```
