@@ -115,10 +115,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         
         userInfo[msg.sender].staking += FIXED_AMOUNT;
         totalPerformance += FIXED_AMOUNT;
-        if(!isAddCollection[msg.sender]){
-            addrCollection.push(msg.sender);
-            isAddCollection[msg.sender] = true;
-        }
+        
         if(userInfo[msg.sender].recommender != address(0)) _processReferralPerformance(msg.sender, FIXED_AMOUNT);
         emit MultiRecharge(msg.sender, USDT, FIXED_AMOUNT, address(0), 0, "");
     }
