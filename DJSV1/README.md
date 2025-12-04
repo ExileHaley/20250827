@@ -23,7 +23,7 @@ $ cast nonce [wallet-address] --rpc-url https://bsc.blockrazor.xyz
 ```
 
 
-### recharge:0x691f5994593965746eD9dB5b5e473BaC5953Bdef
+### recharge:0x24ff628a178ABd50917284B0FE872Cc8AfB5D8F4
 ### abi:./out/recharge.sol/recharge.json
 ### recharge func list:
 ```solidity
