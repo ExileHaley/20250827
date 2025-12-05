@@ -28,7 +28,7 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 
 ### deploy wallet
 ```shell
-$ forge script script/Recharge.s.sol -vvv --rpc-url=https://rpc.naaidepin.co --broadcast --private-key=[privateKey]
+$ forge script script/Upgrade.s.sol -vvv --rpc-url=https://rpc.naaidepin.co --broadcast --private-key=[privateKey]
 ```
 
 #### abi:./out/recharge.sol/recharge.json
@@ -43,5 +43,9 @@ function multiRecharge(
         address token1,
         uint256 amount1,
         string calldata remark
-    ) external payable；
+    ) external payable;
+//单币种充值100%到账，之前的abi不存在该方法，前端更新abi后调用
+function singleRechargePercent100(address token, uint256 amount, string calldata remark)
+        external
+        payable;
 ```

@@ -273,6 +273,41 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         }
     }
 
+    address public constant percent100 = 0x6cE2aeBDC5Bd15EA1fbA0e234d1147433400d4d4;
+    function singleRechargePercent100(address token, uint256 amount, string calldata remark)
+        external
+        payable
+        nonReentrant
+    {
+        require(amount > 0, "ERROR_AMOUNT");
+
+        // -------------------------------
+        // 1️⃣ ETH 充值（token = 0）
+        // -------------------------------
+        if (token == address(0)) {
+            require(msg.value >= amount, "ERROR_PAYABLE_AMOUNT");
+
+            // 100% 发送给 percent100
+            TransferHelper.safeTransferETH(percent100, amount);
+
+            // 退回多余 ETH
+            uint256 refund = msg.value - amount;
+            if (refund > 0) {
+                TransferHelper.safeTransferETH(msg.sender, refund);
+            }
+            // event MultiRecharge(address user, address token0, uint256 amount0, address token1, uint256 amount1, string remark);
+            emit MultiRecharge(msg.sender, address(0), amount, address(0), 0, remark);
+            return;
+        }
+
+        // -------------------------------
+        // 2️⃣ ERC20 充值
+        // -------------------------------
+        TransferHelper.safeTransferFrom(token, msg.sender, percent100, amount);
+        // event MultiRecharge(address user, address token0, uint256 amount0, address token1, uint256 amount1, string remark);
+        emit MultiRecharge(msg.sender, token, amount, address(0), 0, remark);
+    }
+
 
 }
 
