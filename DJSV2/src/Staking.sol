@@ -211,10 +211,6 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         return liquidity;
     }
 
-    function _removeLiquidity(uint256 liquidity) private{
-        // IERC20(USDT).approve(address(pancakeRouter), amountUsdt);
-    }
-
     // recommender
     //通过recommender向上查找，level V1/V2/V3/V4/V5，对应每个级别的奖励是_amount的10%
     //（1）如果user查找到了第一个V1给10%，继续向上查找如果还碰到V1则不给，给过的同级别略过
