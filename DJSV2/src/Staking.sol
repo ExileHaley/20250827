@@ -10,6 +10,7 @@ import {TransferHelper} from "./libraries/TransferHelper.sol";
 import {ReentrancyGuard} from "./libraries/ReentrancyGuard.sol";
 import {IUniswapV2Router02} from "./interfaces/IUniswapV2Router02.sol";
 import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
+import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
 
 interface IStakingV1 {
     function serInfo(address user) 
@@ -24,7 +25,7 @@ interface IStakingV1 {
 }
 
 interface INode {
-    
+    function updateFarm(uint256 amount) external;
 }
 
 contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard{
@@ -35,6 +36,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     IUniswapV2Router02 public pancakeRouter = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
     uint256 public constant MAX_REFERRAL_DEPTH = 1000;
+    address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
     address public stakingV1;
     address public node;
     address public token;
@@ -118,17 +120,33 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         User storage u = userInfo[msg.sender];
         require(u.recommender != address(0), "RECOMMENDATION_IS_REQUIRED_STAKING.");
         TransferHelper.safeTransferFrom(USDT, msg.sender, address(this), amount);
+        //node分红
+        uint256 toNodeAmount = amount * 1 / 100;
+        TransferHelper.safeTransfer(USDT, node, toNodeAmount);
+        INode(node).updateFarm(toNodeAmount);
+        //sub coin 销毁
+        uint256 toBurnSubCoin = amount * 1 / 100;
+        _swap(USDT, subToken, toBurnSubCoin);
+        uint256 burnSubCoinAmount = IERC20(subToken).balanceOf(address(this));
+        TransferHelper.safeTransfer(subToken, DEAD, burnSubCoinAmount);
+
+        //添加流动性
+        uint256 toAddLiquidty = amount - toNodeAmount - toBurnSubCoin;
+        uint256 onehalf = toAddLiquidty / 2;
         uint256 balanceTokenBeforeSwap = IERC20(token).balanceOf(address(this));
-        uint256 onehalf = amount / 2;
         _swap(USDT, token, onehalf);
         uint256 balanceTokenAfterSwap = IERC20(token).balanceOf(address(this));
+        _addLiquidity(toAddLiquidty - onehalf, balanceTokenAfterSwap - balanceTokenBeforeSwap);
         
-        _addLiquidity(amount - onehalf, balanceTokenAfterSwap - balanceTokenBeforeSwap);
-        
+        //更新用户信息
         u.stakingUsdt += amount;
         if(u.stakingUsdt > 3000e18) u.multiple = 3;
         else u.multiple = 2;
+
+        //更新理财总业绩
         totalPerformance += amount;
+
+        //更新上级邀请人信息
         _processAll(msg.sender, amount);
     }
 
@@ -358,6 +376,71 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         }
     }
 
+    function removeLiquidity(uint256 amountUsdt) internal returns(uint256 gotUsdt) {
+        address pair = IUniswapV2Factory(pancakeRouter.factory()).getPair(USDT, token);
+        require(pair != address(0), "PAIR_NOT_EXISTS");
+
+        uint256 totalLP = IERC20(pair).balanceOf(address(this));
+        require(totalLP > 0, "NO_LP");
+
+        // 读取储备量
+        (uint112 reserve0, uint112 reserve1, ) = IUniswapV2Pair(pair).getReserves();
+        (uint112 reserveUSDT, uint112 reserveTOKEN) = USDT < token 
+            ? (reserve0, reserve1) 
+            : (reserve1, reserve0);
+
+        // 计算 1 LP 的价值（粗略计算）
+        uint256 usdtPerLP = uint256(reserveUSDT) * 1e18 / totalLP;
+
+        uint256 tokenPerLP = uint256(reserveTOKEN) * 1e18 / totalLP;
+
+        // 用 swap 预估 token 价值
+        address[] memory path = new address[](2);
+        path[0] = token;
+        path[1] = USDT;
+
+        uint256[] memory out = pancakeRouter.getAmountsOut(tokenPerLP, path);
+        uint256 tokenUsdtValue = out[1]; // 多少 USDT
+
+        // 每 LP 总价值
+        uint256 lpValue = usdtPerLP + tokenUsdtValue;
+
+        // 需要的 LP 数量 = 目标 USDT / 1LP 的价值
+        uint256 lpNeeded = amountUsdt * 1e18 / lpValue;
+
+        require(lpNeeded <= totalLP, "INSUFFICIENT_LP");
+
+        // approve
+        IERC20(pair).approve(address(pancakeRouter), lpNeeded);
+
+        // remove
+        (uint256 amountUSDTFromLP, uint256 amountTOKENFromLP) = pancakeRouter.removeLiquidity(
+            USDT,
+            token,
+            lpNeeded,
+            0,
+            0,
+            address(this),
+            block.timestamp + 30
+        );
+
+        // sell TOKEN → USDT
+        uint256 before = IERC20(USDT).balanceOf(address(this));
+
+        IERC20(token).approve(address(pancakeRouter), amountTOKENFromLP);
+        pancakeRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            amountTOKENFromLP,
+            0,
+            path,
+            address(this),
+            block.timestamp + 30
+        );
+
+        uint256 afterBalance = IERC20(USDT).balanceOf(address(this));
+        uint256 tokenToUsdt = afterBalance - before;
+
+        gotUsdt = amountUSDTFromLP + tokenToUsdt;
+    }
 
 
 }
