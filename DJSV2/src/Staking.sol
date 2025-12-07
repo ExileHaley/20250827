@@ -160,13 +160,17 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         u.subCoinQuota -= amountUsdt;
     }
 
-    function withdraw(uint256 amount) external nonReentrant Pause{
+    function claim(uint256 amountUsdt) external nonReentrant Pause{
 
     }
 
-    function getStakingAward(address user) external view returns(uint256){}
+    function getStakingAward(address user) external view returns(uint256){
 
-    function getShareLevelAward(address user) external view returns(uint256){}
+    }
+
+    function getShareLevelAward(address user) external view returns(uint256){
+
+    }
 
 
     /*==============================================================================
@@ -291,8 +295,6 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         }
 
     }
-
-
 
 
     function _upgradeLevel(address user) internal {
