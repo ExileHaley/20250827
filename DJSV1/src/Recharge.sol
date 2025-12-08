@@ -17,6 +17,10 @@ interface IVenus {
     function redeemUnderlying(uint redeemAmount) external returns (uint);
 }
 
+interface INfts{
+    function mint(address to) external;
+}
+
 
 contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard{
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
@@ -25,6 +29,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     uint256 public constant MAX_REFERRAL_DEPTH = 500;
     address public recipient;
     address public initialCode;
+    address public nfts;
     
     struct User{
         address recommender;
@@ -53,12 +58,14 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
 
     function initialize(
         address _recipient,
-        address _initialCode
+        address _initialCode,
+        address _nfts
     ) public initializer {
         __Ownable_init(_msgSender());
         // __Ownable_init(); 这是错误的，编译直接报错， __Ownable_init需要一个参数
         recipient = _recipient;
         initialCode = _initialCode;
+        nfts = _nfts;
     }
 
     modifier Pause() {
@@ -66,8 +73,13 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         _;
     }
 
+    function setNfts(address _nfts) external onlyOwner{
+        require(_nfts != address(0),"ZERO_ADDRESS.");
+        nfts = _nfts;
+    }
+
     function setRecipient(address _recipient) external onlyOwner {
-        require(_recipient != address(0), "ZERO");
+        require(_recipient != address(0), "ZERO_ADDRESS");
         recipient = _recipient;
     }
 
@@ -115,6 +127,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         
         userInfo[msg.sender].staking += FIXED_AMOUNT;
         totalPerformance += FIXED_AMOUNT;
+        INfts(nfts).mint(msg.sender);
         
         if(userInfo[msg.sender].recommender != address(0)) _processReferralPerformance(msg.sender, FIXED_AMOUNT);
         emit MultiRecharge(msg.sender, USDT, FIXED_AMOUNT, address(0), 0, "");

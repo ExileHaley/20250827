@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test,console} from "forge-std/Test.sol";
 import {Recharge} from "../src/Recharge.sol";
+import {DJSNfts} from "../src/DJSNfts.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -17,7 +18,7 @@ contract RechargeTest is Test{
     address  public recipient;
     address  public initialCode;
     address  public owner;
-
+    DJSNfts  public nfts;
     address public user1;
     address public user2;
     address public user3;
@@ -43,14 +44,15 @@ contract RechargeTest is Test{
         owner = address(7);
 
         vm.startPrank(owner);
+        nfts = new DJSNfts();
 
         Recharge rechargeImpl = new Recharge();
         ERC1967Proxy rechargeProxy = new ERC1967Proxy(
             address(rechargeImpl),
-            abi.encodeCall(rechargeImpl.initialize,(recipient, initialCode))
+            abi.encodeCall(rechargeImpl.initialize,(recipient, initialCode, address(nfts)))
         );
         recharge = Recharge(payable(address(rechargeProxy)));
-
+        nfts.setRecharge(address(recharge));
         vm.stopPrank();
     }
 

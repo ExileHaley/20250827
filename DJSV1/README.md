@@ -14,7 +14,7 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 
 ### deploy wallet
 ```shell
-$ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
+$ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
 ### 查看未执行执行nonce
@@ -22,8 +22,8 @@ $ forge script script/Recharge.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz -
 $ cast nonce [wallet-address] --rpc-url https://bsc.blockrazor.xyz
 ```
 
-
-### recharge:0x9e9d68aDB6C242cb9fc0fe773B2b60020463aAcc
+### nft:0x4E7bd3d735e48E09C080E68D32A0FEA530F63621
+### recharge:0x309Dd705f7809F4fb85321FF7C0a9F1e4465e73a
 ### abi:./out/recharge.sol/recharge.json
 ### recharge func list:
 ```solidity
