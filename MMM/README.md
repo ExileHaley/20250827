@@ -17,7 +17,7 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable  --no-git
 $ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
-### recharge:0x6362A056F31Bd220127947eb4E18095E846cd71E
+### recharge:0x96C37c3Cb0Ef7eb2fC9d31900E31aDf693B7b61B
 ### abi:./out/Staking.sol/Staking.json
 ### recharge func list:
 ```solidity
@@ -56,6 +56,16 @@ function getAddrCollectionLength() external view returns(uint);
 function validInvitationCode(address user) external view returns(bool);
 //用户提取推荐奖励，对应getUserInfo返回的uint256 referralAward
 function claim(uint256 amountUSDT) external;
+//获取直推信息
+struct DirectReferralsInfo{
+        address referral; //下级地址
+        uint256 performance; //业绩
+}
+//获取user的直推地址和对应的业绩信息
+function getDirectReferralsInfo(address user) 
+        external 
+        view 
+        returns (DirectReferralsInfo[] memory);
 
 
 //三个管理端方法

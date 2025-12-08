@@ -221,4 +221,31 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         return IERC20(USDT).allowance(sender, address(this));
     }
 
+    struct DirectReferralsInfo{
+        address referral;
+        uint256 performance;
+    }
+
+    function getDirectReferralsInfo(address user) 
+        external 
+        view 
+        returns (DirectReferralsInfo[] memory) 
+    {
+        address[] memory referrals = directReferrals[user];
+        uint256 len = referrals.length;
+
+        DirectReferralsInfo[] memory infoList = new DirectReferralsInfo[](len);
+
+        for (uint256 i = 0; i < len; i++) {
+            address ref = referrals[i];
+            infoList[i] = DirectReferralsInfo({
+                referral: ref,
+                performance: userInfo[ref].performance
+            });
+        }
+
+        return infoList;
+    }
+
+
 }
