@@ -59,5 +59,15 @@ function getUserInfo(address user)
 function getAddrCollectionLength() external view returns(uint);
 //判断当前地址是否拥有邀请资格
 function validInvitationCode(address user) external view returns(bool);
+//获取直推信息
+struct DirectReferralsInfo{
+        address referral; //下级地址
+        uint256 performance; //业绩
+}
+//获取user的直推地址和对应的业绩信息
+function getDirectReferralsInfo(address user) 
+        external 
+        view 
+        returns (DirectReferralsInfo[] memory);
 
 ```
