@@ -17,9 +17,11 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable  --no-git
 $ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey]
 ```
 
-### recharge:0x96C37c3Cb0Ef7eb2fC9d31900E31aDf693B7b61B
-### abi:./out/Staking.sol/Staking.json
-### recharge func list:
+
+#### 更新abi
+#### recharge:
+#### abi:./out/Staking.sol/Staking.json
+#### recharge func list:
 ```solidity
 //入金是一个固定值500usdt,这个函数会返回500u的固定值,有精度18
 function FIXED_AMOUNT() external view returns(uint256);
@@ -66,6 +68,14 @@ function getDirectReferralsInfo(address user)
         external 
         view 
         returns (DirectReferralsInfo[] memory);
+
+struct Record{
+        address from; //奖励来源地址
+        uint256 amount; //奖励数量
+        uint256 time; //奖励发放时间
+}
+//获取当前用户获得推荐奖励的信息
+function getAwardRecords(address user) external view returns(Record[] memory)
 
 
 //三个管理端方法

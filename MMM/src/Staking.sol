@@ -36,8 +36,15 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         bool    genesisNode;
     }
 
+    struct Record{
+        address from;
+        uint256 amount;
+        uint256 time;
+    }
+
     mapping(address => User) public userInfo;
     mapping(address => address[]) public directReferrals;
+    mapping(address => Record[]) public awardRecords;
 
     uint256 public totalPerformance;
     address[] addrCollection;
@@ -165,7 +172,9 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
             }
             userInfo[current].performance += amountUSDT;
             if(userInfo[current].genesisNode && !awarded) {
-                userInfo[current].referralAwards += amountUSDT * 15 / 100;
+                uint256 awardAmount = amountUSDT * 15 / 100;
+                userInfo[current].referralAwards += awardAmount;
+                awardRecords[current].push(Record(user, awardAmount, block.timestamp));
                 awarded = true;
             }
             current = userInfo[current].recommender;
@@ -247,5 +256,8 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         return infoList;
     }
 
+    function getAwardRecords(address user) external view returns(Record[] memory){
+        return awardRecords[user];
+    }
 
 }
