@@ -173,6 +173,7 @@ pragma solidity ^0.8.20;
 import {IUniswapV2Router02} from "./interfaces/IUniswapV2Router02.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+
 library CalcLib {
 
     // -----------------------------
@@ -216,12 +217,20 @@ library CalcLib {
     // -----------------------------
     // 盈利税计算
     // -----------------------------
-    function calcProfitTax(
-        uint256 profit,
-        uint256 taxRateBP
-    ) internal pure returns(uint256){
-        return (profit * taxRateBP) / 10000;
+    function calcLpNeeded(
+        uint256 reserveUSDT,
+        uint256 reserveToken,
+        uint256 totalLP,
+        uint256 targetUSDT,
+        uint256 tokenToUsdt // token per LP 换算成 USDT
+    ) internal pure returns(uint256 lpNeeded) {
+        uint256 usdtPerLP = reserveUSDT * 1e18 / totalLP;
+        uint256 tokenPerLPUsdt = tokenToUsdt; // swap 后的 USDT 价值
+        uint256 lpValue = usdtPerLP + tokenPerLPUsdt;
+        lpNeeded = targetUSDT * 1e18 / lpValue;
     }
+
+    
 }
 
 
