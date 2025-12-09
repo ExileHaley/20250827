@@ -22,8 +22,8 @@ $ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --b
 $ cast nonce [wallet-address] --rpc-url https://bsc.blockrazor.xyz
 ```
 
-### nft:0x4E7bd3d735e48E09C080E68D32A0FEA530F63621
-### recharge:0x309Dd705f7809F4fb85321FF7C0a9F1e4465e73a
+### nft:0x20D872c41B1373FC9772cbda51609359caFB3748
+### recharge:0x0e7f2f2155199E2606Ce24C9b2C5C7C3D5960116
 ### abi:./out/recharge.sol/recharge.json
 ### recharge func list:
 ```solidity

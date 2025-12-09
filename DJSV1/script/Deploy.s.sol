@@ -15,9 +15,13 @@ contract DeployScript is Script {
 
     DJSNfts public nfts;
 
+// 独角兽项目正式地址
+// 给我一个头部地址，用来向下邀请：0x681be3bA6D85Ff7Ed459372a3aEEEdf43c7Aa37d
+// 还有一个venus token的接收地址：0xdCC65e89485b458deFd8D038De6D6fC16a27dCE5
+
     function setUp() public {
-        recipient = 0xB791b9E7a13991371462c7A76628Ac79777e3165;
-        initialCode = 0xB791b9E7a13991371462c7A76628Ac79777e3165;
+        recipient = 0xdCC65e89485b458deFd8D038De6D6fC16a27dCE5;
+        initialCode = 0x681be3bA6D85Ff7Ed459372a3aEEEdf43c7Aa37d;
         baseURI = "";
     }
 
