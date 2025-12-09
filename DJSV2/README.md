@@ -36,6 +36,9 @@ $ cast nonce [wallet-address] --rpc-url https://bsc.blockrazor.xyz
 ```
 
 ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
 library Errors {
     error ZeroAddress();
     error InvalidRecommender();
@@ -47,7 +50,14 @@ library Errors {
     error InviterExists();
     error PairNotExists();
     error InsufficientLP();
+    error NotAuthorized();
+    error AmountZero();
+    error TransferFailed();
+    error NotStarted();
+    error ExceededLimit();
+    error NotHolder();
 }
+
 ```
 1.代币买卖5%，买的分3%和2%，3%给到节点认购分红(前1000个和后1000个)，有白名单，有盈利税35%，盈利税其中10%分给节点，20%给钱包地址，5%留存到钱钱包手动买入子币销毁，每天底池销毁0.3%
 2.三四入金100个，1个去买子币销毁，1个分给节点，98进底池强制更新价格
