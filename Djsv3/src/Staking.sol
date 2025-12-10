@@ -382,3 +382,5 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
 
 }
+//累加业绩的时候应该要给totalSharePerformance再加上，条件如果recomm..是SHARE
+//增加一个获取奖励记录的方法
