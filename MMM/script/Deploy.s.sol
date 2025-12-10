@@ -14,10 +14,9 @@ contract StakingScript is Script {
     address public sender;
     address public initialCode;
     function setUp() public {
-        admin = 0xB791b9E7a13991371462c7A76628Ac79777e3165;
-        recipient = 0x489A62c36b5B524160db74C32Ba0514c392a42E9;
-        sender = 0x3Ed69DDB2e2aC7d238B8718Fcc228ae3c1E92d2F;
-        initialCode = 0xB791b9E7a13991371462c7A76628Ac79777e3165;
+        admin = 0x7c5d474234CE010B01f1C674542DCeBaa1bEAd41;
+        recipient = 0x32FE505B0aF6d8672F864abd26f93d35a82b0a5a;
+        initialCode = 0x32FE505B0aF6d8672F864abd26f93d35a82b0a5a;
     }
 
     function run() public {
@@ -27,7 +26,7 @@ contract StakingScript is Script {
         Staking stakingImpl = new Staking();
         ERC1967Proxy stakingProxy = new ERC1967Proxy(
             address(stakingImpl),
-            abi.encodeCall(stakingImpl.initialize,(admin, recipient, sender, initialCode))
+            abi.encodeCall(stakingImpl.initialize,(admin, recipient, initialCode))
         );
         staking = Staking(payable(address(stakingProxy)));
 

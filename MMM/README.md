@@ -19,7 +19,7 @@ $ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --b
 
 
 #### 更新abi
-#### recharge:
+#### recharge:0xFC1F7CADFEDd2a5792Ac728b044572c5Cf007776
 #### abi:./out/Staking.sol/Staking.json
 #### recharge func list:
 ```solidity
@@ -75,12 +75,12 @@ struct Record{
         uint256 time; //奖励发放时间
 }
 //获取当前用户获得推荐奖励的信息
-function getAwardRecords(address user) external view returns(Record[] memory)
+function getAwardRecords(address user) external view returns(Record[] memory);
 
 
-//三个管理端方法
-//1.查询sender给当前合约地址授权数量，判断出币的授权额度够不够
-function getSenderApprove() external view returns(uint256);
+//管理端方法
+function setRecipient(address _recipient) external;
+function emergencyWithdraw(address token, uint256 amount, address to) external;
 //2.设置创世节点，手动设置支付gas，使用管理员地址(3),user是要设置的地址，isGenesisNode true/false代表同意/取消
 function setGenesisNode(address user, bool isGenesisNode) external;
 //3.获取管理员地址

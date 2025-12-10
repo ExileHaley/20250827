@@ -24,7 +24,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     uint256 public constant MAX_REFERRAL_DEPTH = 500;
     address public admin;
     address public recipient;
-    address public sender;
+    // address public sender;
     address public initialCode;
     
     struct User{
@@ -65,14 +65,14 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     function initialize(
         address _admin,
         address _recipient,
-        address _sender,
+        // address _sender,
         address _initialCode
     ) public initializer {
         __Ownable_init(_msgSender());
         // __Ownable_init(); 这是错误的，编译直接报错， __Ownable_init需要一个参数
         admin = _admin;
         recipient = _recipient;
-        sender = _sender;
+        // sender = _sender;
         initialCode = _initialCode;
     }
 
@@ -86,17 +86,17 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         _;
     }
 
-    function setRecipient(address _recipient) external onlyOwner {
+    function setRecipient(address _recipient) external onlyAdmin() {
         require(_recipient != address(0), "ZERO_ADDRESS");
         recipient = _recipient;
     }
 
-    function setSender(address _sender) external onlyOwner{
-        require(_sender != address(0), "ZERO_ADDRESS.");
-        sender = _sender;
-    }
+    // function setSender(address _sender) external onlyOwner{
+    //     require(_sender != address(0), "ZERO_ADDRESS.");
+    //     sender = _sender;
+    // }
 
-    function emergencyWithdraw(address token, uint256 amount, address to) external onlyOwner {
+    function emergencyWithdraw(address token, uint256 amount, address to) external onlyAdmin() {
         TransferHelper.safeTransfer(token, to, amount);
     }
 
@@ -104,7 +104,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         pause = isPause;
     }
 
-    function setGenesisNode(address user, bool isGenesisNode) external onlyAdmin{
+    function setGenesisNode(address user, bool isGenesisNode) external onlyAdmin(){
         userInfo[user].genesisNode = isGenesisNode;
     }
 
@@ -222,13 +222,10 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
     function claim(uint256 amountUSDT) external{
         require(amountUSDT <= userInfo[msg.sender].referralAwards,"ERROR_AMOUNT_USDT.");
-        TransferHelper.safeTransferFrom(USDT, sender, msg.sender, amountUSDT);
+        TransferHelper.safeTransferFrom(USDT, address(this), msg.sender, amountUSDT);
         userInfo[msg.sender].referralAwards -= amountUSDT;
     }
 
-    function getSenderApprove() external view returns(uint256) {
-        return IERC20(USDT).allowance(sender, address(this));
-    }
 
     struct DirectReferralsInfo{
         address referral;
