@@ -15,7 +15,7 @@ import {ILiquidity} from "./interfaces/ILiquidity.sol";
 import {Errors} from "./libraries/Errors.sol";
 
 contract LiquidityManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard, ILiquidity{
-    IUniswapV2Router02 public pancakeRouter = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
+    IUniswapV2Router02 public constant pancakeRouter = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
     address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
     address public token;
@@ -44,6 +44,10 @@ contract LiquidityManager is Initializable, OwnableUpgradeable, UUPSUpgradeable,
 
     // Authorize contract upgrades only by the owner
     function _authorizeUpgrade(address newImplementation) internal view override onlyOwner(){}
+
+    function setStaking(address _staking) external onlyOwner{
+        staking = _staking;
+    }
 
     //买入字币给用户
     function swapForSubTokenToUser(address to, uint256 amountUSDT) external override onlyStaking{

@@ -33,6 +33,16 @@ interface IDjsv1 {
             uint256 performance, 
             uint256 referralNum
         );
+    function getUserInfo(address user) 
+        external 
+        view 
+        returns (
+            address recommender, 
+            uint256 staking, 
+            uint256 performance, 
+            uint256 referralNum, 
+            address[] memory referrals
+        );
 }
 
 interface INode {
@@ -61,6 +71,8 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
     mapping(address => address[]) public directReferrals;
     mapping(address => bool) public isAddDirectReferrals;
+
+    mapping(Process.Level => uint256) public subCoinQuotas;
     
     uint256 public totalStakedUsdt;
     bool    public pause;
@@ -90,14 +102,25 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
     function initialize(
         address _admin,
-        address _node
+        address _initialCode,
+        address _djsv1,
+        address _node,
+        address _liquidity
     ) public initializer {
         __Ownable_init(_msgSender());
         admin = _admin;
+        initialCode = _initialCode;
+        djsv1 = _djsv1;
         node = _node;
+        liquidityManager = _liquidity;
         decimals = 1e10;
         perSecondStakedAeward = uint256(12e18 * decimals / 1000e18 / 86400); //这里得计算一下每秒奖励的代币数
         shareRate = 10; //share 奖励比例10%
+        subCoinQuotas[Process.Level.V1] = 100e18;
+        subCoinQuotas[Process.Level.V2] = 300e18;
+        subCoinQuotas[Process.Level.V3] = 500e18;
+        subCoinQuotas[Process.Level.V4] = 1000e18;
+        subCoinQuotas[Process.Level.V5] = 3000e18;
     }
 
     modifier Pause() {
@@ -119,8 +142,9 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     }
 
     function whetherNeedMigrate(address user) public view returns(bool){
-        (address recommender,,,) = IDjsv1(djsv1).userInfo(user);
-        return (!referralInfo[user].isMigration && recommender != address(0));
+        (address v1Recommender,,,) = IDjsv1(djsv1).userInfo(user);
+        // 需要迁移的条件：v1 有 recommender 且 新系统未标记为已迁移
+        return (v1Recommender != address(0) && !referralInfo[user].isMigration);
     }
 
     function referral(address recommender) external nonReentrant Pause{
@@ -138,7 +162,9 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
     function stake(uint256 amountUSDT) external nonReentrant Pause{
         Process.User storage u = userInfo[msg.sender];
-        if(referralInfo[msg.sender].recommender == address(0)) revert Errors.NotRequiredReferral();
+        Process.Referral storage r = referralInfo[msg.sender];
+        if(r.recommender == address(0)) revert Errors.NotRequiredReferral();
+        if(amountUSDT < 100e18) revert Errors.AmountTooLow();
         //分两次转账，给node(1%)/liquidity(99%)
         uint256 amountToNode = amountUSDT * 1 / 100;
         uint256 amountToBurnSubToken = amountUSDT * 1 / 100;
@@ -146,7 +172,9 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         TransferHelper.safeTransferFrom(USDT, msg.sender, node, amountToNode);
         //处理node分红1%，子币销毁1%，添加流动性98%
         ILiquidity(liquidityManager).swapForSubTokenToBurn(amountToBurnSubToken);
-        INode(node).updateFarm(amountToNode);
+
+        if(node != address(0)) INode(node).updateFarm(amountToNode);
+
         ILiquidity(liquidityManager).addLiquidity(amountUSDT - amountToNode - amountToBurnSubToken);
 
         //先计算之前的收益给 pendingProfit，计算参数包括理财收益
@@ -165,20 +193,17 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         }
         //更新总质押totalStakedUsdt
         totalStakedUsdt += amountUSDT;
-        // uint256 sharePerformance = Process.processAll(
-        //     msg.sender,
-        //     amountUSDT,
-        //     referralInfo,
-        //     directReferrals,
-        //     isAddDirectReferrals,
-        //     awardRecords,
-        //     initialCode,
-        //     MAX_REFERRAL_DEPTH
-        // );
+        
+
         uint256 sharePerformance = processLayer(msg.sender, amountUSDT);
         if(sharePerformance > 0) totalSharePerformance += sharePerformance;
         updateShareFram();
-        if(referralInfo[msg.sender].level == Process.Level.SHARE) referralInfo[msg.sender].shareAwardDebt = perSharePerformanceAward * referralInfo[msg.sender].performance;
+        
+        if(r.level == Process.Level.SHARE) r.shareAwardDebt = perSharePerformanceAward * r.performance;
+        if(!isAddDirectReferrals[msg.sender]){
+            directReferrals[r.recommender].push(msg.sender);
+            isAddDirectReferrals[msg.sender] = true;
+        }
         emit Staked(msg.sender, amountUSDT);
     }
 
@@ -297,7 +322,10 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         sharePerformance = 0;
 
         while(current != address(0)){
+
             Process.Referral storage r = referralInfo[current];
+            r.referralNum += 1;
+            r.performance += amount;
 
             // 计算直推 V5 数量
             uint256 directV5 = 0;
@@ -305,10 +333,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
                 if(referralInfo[directReferrals[current][i]].level == Process.Level.V5) directV5++;
             }
 
-            // 计算等级升级
-            (Process.Level newLevel, uint256 addedShare) = Process.calcUpgradeLevel(r, directV5);
-            r.level = newLevel;
-            sharePerformance += addedShare;
+            
 
             // 发放奖励
             (uint256 reward, bool updated) = Process.calcReferralReward(r.level, hasRewarded, amount);
@@ -319,9 +344,13 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
                 totalRate -= 10;
             }
 
+            // 计算等级升级
+            (Process.Level newLevel, uint256 addedShare, bool upgrade) = Process.calcUpgradeLevel(r, directV5);
+            r.level = newLevel;
+            sharePerformance += addedShare;
+            if(upgrade) r.subCoinQuota += subCoinQuotas[newLevel];
+
             // 累加人数和业绩
-            r.referralNum += 1;
-            r.performance += amount;
 
             current = r.recommender;
         }
@@ -380,7 +409,16 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         isMigration = r.isMigration;
     }
 
+    function getReferralAwardRecords(address user) external view returns(Process.Record[] memory){
+        return awardRecords[user];
+    }
+
+    function getDirectReferrals(address user) external view returns(address[] memory){
+        return directReferrals[user];
+    }
 
 }
 //累加业绩的时候应该要给totalSharePerformance再加上，条件如果recomm..是SHARE
 //增加一个获取奖励记录的方法
+//410000000000000000000
+//10000000000000000000
