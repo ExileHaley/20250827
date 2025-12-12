@@ -469,11 +469,51 @@ contract StakingTest is Test{
         assertEq(performance, 11200e18);
 
     }   
-    //测试用户真实收益
-    function test_getUserAward() public {}
+    
+    //测试购买子币
+    function test_swapSubToken() public {
+        test_user1_upgradeV1_withReferralReward();
+        (Process.Level level,,,,,) = staking.getUserInfoBasic(user1);
+        (, , , uint256 subCoinQuota , ) = staking.getUserInfoReferral(user1);
+        assertEq(uint256(level), uint256(Process.Level.V1));
+        assertEq(subCoinQuota, 100e18);
+
+        vm.startPrank(user1);
+        deal(USDT, user1, 100e18);
+        IERC20(USDT).approve(address(staking), 100e18);
+        staking.swapSubToken(100e18);
+        vm.stopPrank();
+        (, , , uint256 subCoinQuota0 , ) = staking.getUserInfoReferral(user1);
+        assertEq(subCoinQuota0, 0);
+        console.log("Sub token balance of User1:",tdjsc.balanceOf(user1));
+    }
+
+    
+    //测试用户质押收益
+    function test_getUserStakeAward() public {
+        address user3 = address(1111);
+        uint256 amountUsdt = 100e18;
+        deal(USDT, user3, amountUsdt);
+        vm.startPrank(user3);
+        staking.referral(initialCode);
+        IERC20(USDT).approve(address(staking), amountUsdt);
+        staking.stake(amountUsdt);
+        vm.stopPrank();
+        vm.warp(block.timestamp + 1 days);
+        uint256 stakeAward = staking.getUserStakingAward(user3);
+        console.log("One days award:",stakeAward);
+        
+
+        vm.warp(block.timestamp + 167 days);
+        uint256 userAward = staking.getUserAward(user3);
+        console.log("Max award:",userAward);
+    }
+
+    function test_claim() public {
+        
+    }
+
     //测试节点SHARE收益
     function test_getShareAward() public {}
-    //测试购买子币
-    function test_swapSubToken() public {}
 }
 

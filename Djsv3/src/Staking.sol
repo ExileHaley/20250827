@@ -216,8 +216,9 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         if (u.stakingUsdt == 0) return 0;
 
         // 1. 计算当前动态质押收益（还没结算进 pendingProfit 部分）
-        uint256 delta = block.timestamp - u.stakingTime;
-        uint256 stakeAward = u.stakingUsdt * delta * perSecondStakedAeward / decimals;
+        // uint256 delta = block.timestamp - u.stakingTime;
+        // uint256 stakeAward = u.stakingUsdt * delta * perSecondStakedAeward / decimals;
+        uint256 stakeAward = getUserStakingAward(user);
 
         // 2. SHARE 等级收益（此部分可动态计算，不累加进 pendingProfit）
         uint256 shareAward = getShareLevelAward(user);
@@ -262,8 +263,10 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         return reward - r.shareAwardDebt;
     }
 
-
-
+    function getUserStakingAward(address user) public view returns(uint256){
+        Process.User memory u = userInfo[user];
+        return (block.timestamp - u.stakingTime) * perSecondStakedAeward * u.stakingUsdt / decimals;
+    }
 
     function updateShareFram() internal {
         uint256 delta = block.timestamp - lastShareAwardTime;
