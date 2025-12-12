@@ -50,6 +50,7 @@ function getUserInfo(address user)
             uint256 referralAward, //当前用户的推荐奖励
             uint256 performance,  //当前用户截止目前的总业绩，伞下所有，有精度
             uint256 referralNum,  //当前用户截止目前的总人数，伞下所有，没有精度
+            bool    isGenesisNode, //是不是创世节点
             address[] memory referrals //返回地址数组，当前地址邀请的所有直推地址
         );
 //获取全网参与的总人数，没有精度

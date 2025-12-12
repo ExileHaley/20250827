@@ -190,6 +190,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
             uint256 referralAward,
             uint256 performance, 
             uint256 referralNum, 
+            bool    isGenesisNode,
             address[] memory referrals
         ) 
     {
@@ -202,6 +203,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
             u.referralAwards,
             u.performance,
             u.referralNum,
+            u.genesisNode,
             refs
         );
     }
@@ -246,7 +248,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
             address ref = referrals[i];
             infoList[i] = DirectReferralsInfo({
                 referral: ref,
-                performance: userInfo[ref].staking
+                performance: userInfo[ref].staking + userInfo[ref].performance
             });
         }
 
