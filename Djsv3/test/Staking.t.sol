@@ -45,6 +45,8 @@ contract StakingTest is Test{
     TDjs public tdjs;
     TDjsc public tdjsc;
 
+    address public nfts;
+
 
     address public USDT;
     address public uniswapV2Router;
@@ -60,6 +62,7 @@ contract StakingTest is Test{
         uniswapV2Router = address(0x10ED43C718714eb63d5aA57B78B54704E256024E);
         USDT = address(0x55d398326f99059fF775485246999027B3197955);
         djsv1 = address(0x0e7f2f2155199E2606Ce24C9b2C5C7C3D5960116);
+        nfts = address(0x20D872c41B1373FC9772cbda51609359caFB3748);
 
 
         admin = address(1);
@@ -85,7 +88,7 @@ contract StakingTest is Test{
         NodeDividends nodeImpl = new NodeDividends();
         ERC1967Proxy nodeProxy = new ERC1967Proxy(
             address(nodeImpl),
-            abi.encodeCall(nodeImpl.initialize,())
+            abi.encodeCall(nodeImpl.initialize,(nfts, address(tdjs)))
         );
         nodeDividends = NodeDividends(payable(address(nodeProxy)));
 
