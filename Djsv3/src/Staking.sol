@@ -182,6 +182,8 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         //2.stakingUsdt * multiple <= 理财收益 + referralAward + extracted + pendingProfit + 
         uint256 reward = getUserAward(msg.sender);
         if(reward > 0) u.pendingProfit += reward;
+        if(r.level == Process.Level.SHARE) r.shareAwardDebt = perSharePerformanceAward * r.performance;
+
         //更新stakingUsdt
         u.stakingUsdt += amountUSDT;
         //更新质押时间stakingTime
@@ -193,17 +195,14 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         }
         //更新总质押totalStakedUsdt
         totalStakedUsdt += amountUSDT;
-        
 
-        uint256 sharePerformance = processLayer(msg.sender, amountUSDT);
-        if(sharePerformance > 0) totalSharePerformance += sharePerformance;
-        updateShareFram();
-        
-        if(r.level == Process.Level.SHARE) r.shareAwardDebt = perSharePerformanceAward * r.performance;
         if(!isAddDirectReferrals[msg.sender]){
             directReferrals[r.recommender].push(msg.sender);
             isAddDirectReferrals[msg.sender] = true;
         }
+
+        uint256 sharePerformance = processLayer(msg.sender, amountUSDT);
+        if(sharePerformance > 0) totalSharePerformance += sharePerformance;
         emit Staked(msg.sender, amountUSDT);
     }
 
@@ -221,7 +220,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         uint256 stakeAward = getUserStakingAward(user);
 
         // 2. SHARE 等级收益（此部分可动态计算，不累加进 pendingProfit）
-        uint256 shareAward = getShareLevelAward(user);
+        uint256 shareAward = getUserShareLevelAward(user);
 
         // 3. 用户当前总未提取收益
         uint256 totalAward = u.pendingProfit + stakeAward + shareAward;
@@ -242,7 +241,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     //1.每次claim时更新perSharePerformanceAward，用totalStakedUsdt * 时间间隔 * 每个质押收益 / 总的share等级业绩
     //2.计算动态收益，按照上述方式计算没更新的当前时间段内的收益，动态计算不依赖更新
     //3.把两部分的收益加起来就等于总的Share等级收益
-    function getShareLevelAward(address user) public view returns(uint256){
+    function getUserShareLevelAward(address user) public view returns(uint256){
         Process.Referral memory r = referralInfo[user];
         if (r.performance == 0 || totalSharePerformance == 0) return 0;
 
@@ -268,7 +267,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         return (block.timestamp - u.stakingTime) * perSecondStakedAeward * u.stakingUsdt / decimals;
     }
 
-    function updateShareFram() internal {
+    function updateShareFram(uint256 totalStaked) internal {
         uint256 delta = block.timestamp - lastShareAwardTime;
         if (delta == 0 || totalSharePerformance == 0) {
             lastShareAwardTime = block.timestamp;
@@ -276,10 +275,18 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         }
 
         uint256 totalShareAward =
-            totalStakedUsdt * delta * perSecondStakedAeward * shareRate / 100;
+            totalStaked * delta * perSecondStakedAeward * shareRate / 100;
 
         perSharePerformanceAward += totalShareAward / totalSharePerformance;
         lastShareAwardTime = block.timestamp;
+    }
+
+    function getInvalidStaking(address user) public view returns(uint256){
+        Process.User storage u = userInfo[user];
+        uint256 totalAward = u.pendingProfit + getUserStakingAward(user) + getUserShareLevelAward(user) / decimals + u.extracted;
+        if (totalAward > u.stakingUsdt * u.multiple) return u.stakingUsdt;
+        else return 0; 
+
     }
 
     function claim(uint256 amount) external nonReentrant {
@@ -287,30 +294,33 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         if (u.stakingUsdt == 0) revert Errors.NoStake();
 
         // 1. 更新 SHARE 奖励
-        updateShareFram();
+        uint256 validStaked = totalStakedUsdt - getInvalidStaking(msg.sender);
+        updateShareFram(validStaked);
 
         // 2. 获取用户可提取总收益
         uint256 totalAward = getUserAward(msg.sender);
         if (totalAward == 0) revert Errors.NoReward();
 
         // 3. 限制用户提取额度
-        uint256 claimAmount = amount > totalAward ? totalAward : amount;
+        // uint256 claimAmount = amount > totalAward ? totalAward : amount;
+        if(amount > totalAward) revert Errors.InvalidAmount();
 
         // 4. 优先扣减 pendingProfit
-        if(u.pendingProfit >= claimAmount){
-            u.pendingProfit -= claimAmount;
+        if(u.pendingProfit >= amount){
+            u.pendingProfit -= amount;
         } else {
             u.pendingProfit = 0;
             // 剩余从动态质押收益 + SHARE收益扣减，直接通过 extracted 处理
         }
 
         // 5. 更新已提取金额
-        u.extracted += claimAmount;
+        u.extracted += amount;
 
         // 6. 转账 USDT 给用户
-        ILiquidity(liquidityManager).acquireSpecifiedUsdt(msg.sender, claimAmount);
-        if(referralInfo[msg.sender].level == Process.Level.SHARE) referralInfo[msg.sender].shareAwardDebt = perSharePerformanceAward * referralInfo[msg.sender].performance;
-        emit Claimed(msg.sender, claimAmount);
+        ILiquidity(liquidityManager).acquireSpecifiedUsdt(msg.sender, amount);
+        Process.Referral storage r = referralInfo[msg.sender];
+        if(r.level == Process.Level.SHARE) r.shareAwardDebt = perSharePerformanceAward * r.performance;
+        emit Claimed(msg.sender, amount);
     }
 
 
@@ -392,7 +402,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         // 当前可提取总收益
         totalAward = getUserAward(user);
         // 当前Share等级收益
-        shareAward = getShareLevelAward(user);
+        shareAward = getUserShareLevelAward(user);
     }
 
     // 返回用户邀请/推荐相关信息
@@ -421,7 +431,3 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     }
 
 }
-//累加业绩的时候应该要给totalSharePerformance再加上，条件如果recomm..是SHARE
-//增加一个获取奖励记录的方法
-//410000000000000000000
-//10000000000000000000

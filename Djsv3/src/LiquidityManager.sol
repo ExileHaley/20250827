@@ -109,97 +109,215 @@ contract LiquidityManager is Initializable, OwnableUpgradeable, UUPSUpgradeable,
 
 
 
-    function acquireSpecifiedUsdt(address to, uint256 amountUSDT) external override onlyStaking {
-        // 1. 获取 LP token 并移除流动性
+    // function acquireSpecifiedUsdt(address to, uint256 amountUSDT) external override onlyStaking {
+    //     // 1. 获取 LP token 并移除流动性
+    //     address pair = IUniswapV2Factory(pancakeRouter.factory()).getPair(USDT, token);
+    //     uint256 lpTokenBalance = IERC20(pair).balanceOf(address(this));
+    //     if (lpTokenBalance == 0) revert Errors.NoLiquidity(); // 如果没有流动性则抛出错误
+        
+    //     uint256 totalLP = lpTokenBalance; // 计算 LP 总量
+    //     // 计算需要的 LP
+    //     uint256 lpNeeded = amountUSDT * 1e18 / _getLPValue(totalLP);
+
+    //     // 确保你有足够的 LP token
+    //     if (lpNeeded > lpTokenBalance) revert Errors.InsufficientLP();
+
+    //     // 2. 移除流动性并获取 USDT 和 token
+    //     (uint256 amountUSDTFromLP, uint256 amountTokenFromLP) = pancakeRouter.removeLiquidity(
+    //         USDT,
+    //         token,
+    //         lpNeeded,
+    //         0,
+    //         0,
+    //         address(this),
+    //         block.timestamp + 30
+    //     );
+
+    //     // 3. 将移除流动性所得的 token 卖出为 USDT
+    //     uint256 tokenToUSDT = _swapTokenToUSDT(amountTokenFromLP);
+
+    //     // 4. 计算实际转账的 USDT 数量并转账
+    //     uint256 totalUSDT = amountUSDTFromLP + tokenToUSDT;
+    //     if (totalUSDT < amountUSDT) revert Errors.InsufficientLiquidity(); // 如果移除流动性后的 USDT 不足，则抛出错误
+
+    //     // 5. 转账 目标地址 to，扣除手续费 5e18
+    //     uint256 transferAmount = totalUSDT - 5e18;
+    //     TransferHelper.safeTransfer(USDT, to, transferAmount);
+
+    //     // 6. 将 5e18 的 USDT 转换为 subToken，并转到 DEAD 地址
+    //     _burnSubToken(5e18);
+    // }
+
+    // function _burnSubToken(uint256 amountUSDT) private{
+    //     if (amountUSDT == 0) return ;
+    //     _executeSwap(USDT, subToken, amountUSDT);
+    //     uint256 subTokenBalance = IERC20(subToken).balanceOf(address(this));
+    //     TransferHelper.safeTransfer(subToken, DEAD, subTokenBalance);
+    // }
+
+    // function _getLPValue(uint256 totalLP) internal view returns(uint256) {
+    //     address pair = IUniswapV2Factory(pancakeRouter.factory()).getPair(USDT, token);
+    //     // require(pair != address(0), "Pair does not exist");
+    //     if(pair == address(0)) revert Errors.PairNotExist();
+
+    //     (uint112 reserveUSDT, uint112 reserveToken, ) = IUniswapV2Pair(pair).getReserves();
+    //     uint256 usdtPerLP = reserveUSDT * 1e18 / totalLP;
+    //     uint256 tokenPerLP = reserveToken * 1e18 / totalLP;
+
+    //     // 获取 token 的价格
+    //     address[] memory path = new address[](2);
+    //     path[0] = token;
+    //     path[1] = USDT;
+
+    //     uint256[] memory amounts = pancakeRouter.getAmountsOut(tokenPerLP, path);
+    //     uint256 tokenToUSDT = amounts[1];
+
+    //     uint256 lpValue = usdtPerLP + tokenToUSDT;
+    //     return lpValue;
+    // }
+
+    // function _swapTokenToUSDT(uint256 amountToken) internal returns(uint256) {
+    //     address[] memory path = new address[](2);
+    //     path[0] = token;
+    //     path[1] = USDT;
+        
+    //     // 执行 token → USDT 的交换
+    //     IERC20(token).approve(address(pancakeRouter), amountToken);
+    //     uint256[] memory amountsOut = pancakeRouter.getAmountsOut(amountToken, path);
+
+    //     pancakeRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+    //         amountToken,
+    //         0,
+    //         path,
+    //         address(this),
+    //         block.timestamp + 30
+    //     );
+
+    //     uint256 usdtBalanceAfter = IERC20(USDT).balanceOf(address(this));
+    //     uint256 amountUSDT = usdtBalanceAfter - amountsOut[0];
+        
+    //     return amountUSDT;
+    // }
+
+    function acquireSpecifiedUsdt(address to, uint256 needUSDT) external onlyStaking {
+
+        if(needUSDT <= 5e18) revert Errors.InvalidAmount();
         address pair = IUniswapV2Factory(pancakeRouter.factory()).getPair(USDT, token);
         uint256 lpTokenBalance = IERC20(pair).balanceOf(address(this));
         if (lpTokenBalance == 0) revert Errors.NoLiquidity(); // 如果没有流动性则抛出错误
-        
-        uint256 totalLP = lpTokenBalance; // 计算 LP 总量
-        // 计算需要的 LP
-        uint256 lpNeeded = amountUSDT * 1e18 / _getLPValue(totalLP);
+        (uint256 tokenAmount, uint256 usdtAmount) = quoteLPValue(pair);
 
-        // 确保你有足够的 LP token
-        if (lpNeeded > lpTokenBalance) revert Errors.InsufficientLP();
+        address[] memory path = new address[](2);
+        path[0] = token;  // 输入 token
+        path[1] = USDT; 
+        uint[] memory amounts = IUniswapV2Router02(pancakeRouter).getAmountsIn(needUSDT / 2, path);
 
-        // 2. 移除流动性并获取 USDT 和 token
-        (uint256 amountUSDTFromLP, uint256 amountTokenFromLP) = pancakeRouter.removeLiquidity(
-            USDT,
-            token,
-            lpNeeded,
-            0,
-            0,
-            address(this),
+        uint256 requiredLpByToken = amounts[0] * 1e18 / tokenAmount;
+        uint256 requiredLpByUSDT = needUSDT / 2 * 1e18 / usdtAmount;
+        uint256 lpToRemove = requiredLpByToken > requiredLpByUSDT ? requiredLpByToken : requiredLpByUSDT;
+        if(lpToRemove > lpTokenBalance) revert Errors.InsufficientLiquidity();
+        removeLiquidity(pair, lpToRemove);
+
+        uint256 tokenBalance = IERC20(token).balanceOf(address(this));
+        TransferHelper.safeApprove(token, address(pancakeRouter), tokenBalance);
+        IUniswapV2Router02(pancakeRouter).swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            tokenBalance, 
+            0, 
+            path, 
+            address(this), 
             block.timestamp + 30
         );
-
-        // 3. 将移除流动性所得的 token 卖出为 USDT
-        uint256 tokenToUSDT = _swapTokenToUSDT(amountTokenFromLP);
-
-        // 4. 计算实际转账的 USDT 数量并转账
-        uint256 totalUSDT = amountUSDTFromLP + tokenToUSDT;
-        if (totalUSDT < amountUSDT) revert Errors.InsufficientLiquidity(); // 如果移除流动性后的 USDT 不足，则抛出错误
-
-        // 5. 转账 目标地址 to，扣除手续费 5e18
-        uint256 transferAmount = totalUSDT - 5e18;
-        TransferHelper.safeTransfer(USDT, to, transferAmount);
-
-        // 6. 将 5e18 的 USDT 转换为 subToken，并转到 DEAD 地址
+        
+        uint256 amountUSDT = IERC20(USDT).balanceOf(address(this));
+        if(amountUSDT < needUSDT) revert Errors.AmountTooLow();
+        TransferHelper.safeTransfer(USDT, to, needUSDT - 5e18);
         _burnSubToken(5e18);
     }
 
-    function _burnSubToken(uint256 amountUSDT) private{
-        if (amountUSDT == 0) return ;
-        _executeSwap(USDT, subToken, amountUSDT);
-        uint256 subTokenBalance = IERC20(subToken).balanceOf(address(this));
-        TransferHelper.safeTransfer(subToken, DEAD, subTokenBalance);
-    }
-
-    function _getLPValue(uint256 totalLP) internal view returns(uint256) {
+    function getNeedLP(uint256 amountUSDT) external view returns(uint256){
         address pair = IUniswapV2Factory(pancakeRouter.factory()).getPair(USDT, token);
-        // require(pair != address(0), "Pair does not exist");
-        if(pair == address(0)) revert Errors.PairNotExist();
+        // uint256 lpTokenBalance = IERC20(pair).balanceOf(address(this));
+        (uint256 tokenAmount, uint256 usdtAmount) = quoteLPValue(pair);
+         address[] memory path = new address[](2);
+        path[0] = token;  // 输入 token
+        path[1] = USDT; 
+        uint[] memory amounts = IUniswapV2Router02(pancakeRouter).getAmountsIn(amountUSDT / 2, path);
 
-        (uint112 reserveUSDT, uint112 reserveToken, ) = IUniswapV2Pair(pair).getReserves();
-        uint256 usdtPerLP = reserveUSDT * 1e18 / totalLP;
-        uint256 tokenPerLP = reserveToken * 1e18 / totalLP;
+        uint256 requiredLpByToken = amounts[0] * 1e18 / tokenAmount;
+        uint256 requiredLpByUSDT = amountUSDT / 2 * 1e18 / usdtAmount;
+        uint256 lpToRemove = requiredLpByToken > requiredLpByUSDT ? requiredLpByToken : requiredLpByUSDT;
 
-        // 获取 token 的价格
-        address[] memory path = new address[](2);
-        path[0] = token;
-        path[1] = USDT;
-
-        uint256[] memory amounts = pancakeRouter.getAmountsOut(tokenPerLP, path);
-        uint256 tokenToUSDT = amounts[1];
-
-        uint256 lpValue = usdtPerLP + tokenToUSDT;
-        return lpValue;
+        return lpToRemove;
     }
 
-    function _swapTokenToUSDT(uint256 amountToken) internal returns(uint256) {
+
+    function removeLiquidity(address pair, uint256 amountLP) private{
+        TransferHelper.safeApprove(pair, address(pancakeRouter), amountLP);
+        IUniswapV2Router02(pancakeRouter).removeLiquidity(
+            token, 
+            USDT, 
+            amountLP, 
+            0, 
+            0, 
+            address(this), 
+            block.timestamp
+        );
+    }
+
+    function quoteLPValue(address pair)
+        public
+        view
+        returns (uint256 tokenAmount, uint256 usdtAmount)
+    {
+        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(pair).getReserves();
+        uint256 totalLP = IUniswapV2Pair(pair).totalSupply();
+
+        address token0 = IUniswapV2Pair(pair).token0();
+        address token1 = IUniswapV2Pair(pair).token1();
+
+        require(token0 == token || token1 == token, "token not in pair");
+        require(token0 == USDT || token1 == USDT, "USDT not in pair");
+
+        if (token0 == token && token1 == USDT) {
+            tokenAmount = uint256(reserve0) * 1e18 / totalLP;
+            usdtAmount  = uint256(reserve1) * 1e18 / totalLP;
+        } else if (token0 == USDT && token1 == token) {
+            tokenAmount = uint256(reserve1) * 1e18 / totalLP;
+            usdtAmount  = uint256(reserve0) * 1e18 / totalLP;
+        } else {
+            revert("invalid pair");
+        }
+    }
+
+
+    // -------------------------
+    // 将指定的 USDT 兑换为 subToken 并转给 DEAD（销毁）
+    // -------------------------
+    function _burnSubToken(uint256 amountUSDT) private {
+        if (amountUSDT == 0) return;
+
         address[] memory path = new address[](2);
-        path[0] = token;
-        path[1] = USDT;
-        
-        // 执行 token → USDT 的交换
-        IERC20(token).approve(address(pancakeRouter), amountToken);
-        uint256[] memory amountsOut = pancakeRouter.getAmountsOut(amountToken, path);
+        path[0] = USDT;
+        path[1] = subToken;
+
+        uint256 beforeSwap = IERC20(subToken).balanceOf(address(this));
+
+        TransferHelper.safeApprove(USDT, address(pancakeRouter), amountUSDT);
 
         pancakeRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-            amountToken,
+            amountUSDT,
             0,
             path,
             address(this),
-            block.timestamp + 30
+            block.timestamp + 60
         );
 
-        uint256 usdtBalanceAfter = IERC20(USDT).balanceOf(address(this));
-        uint256 amountUSDT = usdtBalanceAfter - amountsOut[0];
-        
-        return amountUSDT;
+        uint256 afterSwap = IERC20(subToken).balanceOf(address(this));
+        uint256 got = afterSwap - beforeSwap;
+        if (got > 0) {
+            TransferHelper.safeTransfer(subToken, DEAD, got);
+        }
     }
-
-    
 
 }
 

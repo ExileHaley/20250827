@@ -11,6 +11,8 @@ library Errors {
     // error NotStarted();
     // error ExceededLimit();
     // error NotHolder();
+    error DivByZero();
+    error InvalidAmount();
     error InsufficientQuota();
     error ZeroAddress();
     error InvalidRecommender();

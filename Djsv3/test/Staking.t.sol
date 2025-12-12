@@ -10,6 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {TDjs} from "../src/mock/TDjs.sol";
 import {TDjsc} from "../src/mock/TDjsc.sol";
 import {IUniswapV2Router02} from "../src/interfaces/IUniswapV2Router02.sol";
+import {IUniswapV2Factory} from "../src/interfaces/IUniswapV2Factory.sol";
 import {Errors} from "../src/libraries/Errors.sol";
 import {Process} from "../src/libraries/Process.sol";
 interface IDjsv1 {
@@ -156,6 +157,7 @@ contract StakingTest is Test{
         uint256 subCoinQuota,
         bool    isMigration )= staking.getUserInfoReferral(initialCode);
         assertEq(referralNum, 1);
+        console.log("initialCode referralNum:",referralNum);
         assertEq(performance, amountUSDT);
         assertEq(referralAward, amountUSDT * 50 / 100);
         assertEq(subCoinQuota, 0);
@@ -507,11 +509,82 @@ contract StakingTest is Test{
         vm.warp(block.timestamp + 167 days);
         uint256 userAward = staking.getUserAward(user3);
         console.log("Max award:",userAward);
+
+        address factory = IUniswapV2Router02(uniswapV2Router).factory();
+        address pair = IUniswapV2Factory(factory).getPair(USDT, address(tdjs));
+
+        console.log("Before claim token balance of liquidity:",tdjs.balanceOf(address(liquidityManager)));
+        console.log("Before claim USDT balance of liquidity:",IERC20(USDT).balanceOf(address(liquidityManager)));
+        console.log("Before claim USDT balance of user:",IERC20(USDT).balanceOf(user3));
+        console.log("Before claim lp balance of liquidity:",IERC20(pair).balanceOf(address(liquidityManager)));
+        
+        console.log("100eUSDT require XXXX LP:",liquidityManager.getNeedLP(100e18));
+        (uint256 tokenAmount, uint256 usdtAmount) = liquidityManager.quoteLPValue(pair);
+        console.log("LP tokenAmount value:",tokenAmount);
+        console.log("LP usdtAmount value:",usdtAmount);
+        
+
+        vm.startPrank(user3);
+        staking.claim(50e18);
+        vm.stopPrank();
+        assertEq(IERC20(USDT).balanceOf(user3), 45e18);
+        (,,,,uint256 extracted) = staking.userInfo(user3);
+        assertEq(extracted, 50e18);
+        console.log("After claim token balance of liquidity:",tdjs.balanceOf(address(liquidityManager)));
+        console.log("After claim USDT balance of liquidity:",IERC20(USDT).balanceOf(address(liquidityManager)));
+        console.log("After claim USDT balance of user:",IERC20(USDT).balanceOf(user3));
+        console.log("Before claim lp balance of liquidity:",IERC20(pair).balanceOf(address(liquidityManager)));
+        assertEq(staking.getUserAward(user3), 150e18);
     }
 
-    function test_claim() public {
+    // /// @notice 批量生成用户地址（pseudo-random deterministic）
+    // function createUsers(address root, uint256 count, uint256 startIndex) pure internal returns (address[] memory users) {
+    //     users = new address[](count);
+    //     for (uint256 i = 0; i < count; i++) {
+    //         // 使用 keccak256 生成一个“确定性”地址
+    //         address userx = address(uint160(uint256(keccak256(abi.encode(root, startIndex + i)))));
+    //         users[i] = userx;
+    //     }
+    // }
+
+    // function test_loop_max() public{
+    //     address[] memory users = createUsers(user, 1000, 1150);
+    //     for(uint i=0; i<users.length; i++){
+    //         deal(USDT, users[i], 100e18);
+    //         vm.startPrank(users[i]);
+    //         IERC20(USDT).approve(address(staking),100e18);
+    //         if(i==0) staking.referral(initialCode);
+    //         else staking.referral(users[i-1]);
+    //         staking.stake(100e18);
+    //         vm.stopPrank();
+    //     }
+    // }
+
+    function test_reStake() public {
+        address user3 = address(1111);
+        uint256 amountUsdt = 1000e18;
+        deal(USDT, user3, amountUsdt);
+        vm.startPrank(user3);
+        staking.referral(initialCode);
+        IERC20(USDT).approve(address(staking), amountUsdt);
+        staking.stake(500e18);
+        vm.warp(block.timestamp + 1 days);
+        uint256 awardOnce = staking.getUserAward(user3);
+
+        staking.stake(500e18);
+        (,,,uint256 pendingProfit,) = staking.userInfo(user3);
+        assertEq(pendingProfit, awardOnce);
         
+        staking.claim(55e17);
+        (,,,,uint256 extracted) = staking.userInfo(user3);
+        assertEq(extracted, 55e17);
+        vm.warp(block.timestamp + 200 days);
+        assertEq(staking.getUserAward(user3), 19945e17);
+        vm.stopPrank();
+
+
     }
+   
 
     //测试节点SHARE收益
     function test_getShareAward() public {}
