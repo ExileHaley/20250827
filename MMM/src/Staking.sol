@@ -246,7 +246,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
             address ref = referrals[i];
             infoList[i] = DirectReferralsInfo({
                 referral: ref,
-                performance: userInfo[ref].performance
+                performance: userInfo[ref].staking
             });
         }
 
