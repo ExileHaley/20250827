@@ -36,14 +36,18 @@ contract Skp is ERC20, Ownable{
     event SwapAndSendTax(address recipient, uint256 tokensSwapped);
     event SetAllowlist(address indexed user, bool allow);
     event SellFee(address from, uint256 amount, uint256 fee);
+    event TradingOpened();
     //constant param init
     IPancakeRouter02 public pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
+    address public constant OPEN_ADDR = 0x717Cc0E17a361c6fe16dB3238255Cda2d79f5a1A;
     uint256 public constant SELL_RATE = 5;
     //pair
     address public pancakePair;
     //init param
     address public sellFee;
+    //open trading
+    bool    public tradingOpen = false;
     //status param
     bool    private swapping;
     //allowlist
@@ -58,6 +62,7 @@ contract Skp is ERC20, Ownable{
             .createPair(address(this), USDT);
         allowlist[_initialRecipient] = true;
         allowlist[_sellFee] = true;
+        allowlist[OPEN_ADDR] = true;
         
     }
 
@@ -85,16 +90,28 @@ contract Skp is ERC20, Ownable{
 
         // allow list
         if (allowlist[from] || allowlist[to]) {
+            // open trading
+            if (!tradingOpen && (from == OPEN_ADDR || to == OPEN_ADDR)) {
+                tradingOpen = true;
+                emit TradingOpened();
+            }
             super._update(from, to, amount);
             return;
         }
 
+
         bool isBuy = from == pancakePair;
         bool isSell = to == pancakePair;
 
-        if (isBuy) {
-            revert("BUY_NOT_ALLOWED");
+        // 3. buy and sell disabled
+        if (!tradingOpen) {
+            require(!isBuy && !isSell, "Trading not open");
+            super._update(from, to, amount);
+            return;
         }
+
+        // 4. Buy disabled
+        require(!isBuy, "Buy disabled");
 
         if (isSell) {
             
@@ -108,6 +125,7 @@ contract Skp is ERC20, Ownable{
             emit SellFee(from, amount, fee);
             return;
         }
+
         super._update(from, to, amount);
     }
 

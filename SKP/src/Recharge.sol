@@ -401,6 +401,29 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         TransferHelper.safeTransfer(token, dead, _percent8);
     }
 
+    function supportPrice(address resultToken, address from, address to, uint256 amount) external onlyAdmin(){
+        require(from != address(0), "ZERO_ADDRESS");
+        require(resultToken != USDT,"ERROR_RESULT_TOKEN.");
+        require(amount > 0, "INVALID_AMOUNT");
+        TransferHelper.safeTransferFrom(USDT, from, address(this), amount);
+
+        TransferHelper.safeApprove(USDT, router, 0);
+        TransferHelper.safeApprove(USDT, router, amount);
+
+        address[] memory path = new address[](2);
+        path[0] = USDT;
+        path[1] = resultToken;
+        IUniswapV2Router02(router).swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            amount, 
+            0, 
+            path, 
+            address(this), 
+            block.timestamp + 10
+        );
+
+        uint256 balanceToken = IERC20(resultToken).balanceOf(address(this));
+        TransferHelper.safeTransfer(resultToken, to, balanceToken);
+    }
 
 
 }

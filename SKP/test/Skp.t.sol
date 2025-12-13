@@ -17,6 +17,7 @@ contract SkpTest is Test{
     address user1;
     address public USDT;
     address public uniswapV2Router;
+    address public openAddr;
 
     uint256 mainnetFork;
 
@@ -26,6 +27,7 @@ contract SkpTest is Test{
         //mainnet address
         uniswapV2Router = address(0x10ED43C718714eb63d5aA57B78B54704E256024E);
         USDT = address(0x55d398326f99059fF775485246999027B3197955);
+        openAddr = address(0x717Cc0E17a361c6fe16dB3238255Cda2d79f5a1A);
         
         //init address
         initialRecipient = vm.addr(1);
@@ -64,6 +66,7 @@ contract SkpTest is Test{
     }
 
     function test_sell_not_allowlist() public {
+        test_buy_byOpenAddr();
         vm.startPrank(initialRecipient);
         skp.transfer(user, 101e18);
         vm.stopPrank();
@@ -83,6 +86,24 @@ contract SkpTest is Test{
         vm.stopPrank();
         console.log("usdt balance of sell fee:",IERC20(USDT).balanceOf(sellFee));
 
+    }
+
+    function test_buy_byOpenAddr() public {
+        vm.startPrank(openAddr);
+        deal(USDT, openAddr, 100e18);
+        IERC20(USDT).approve(uniswapV2Router, 100e18);
+        address[] memory path = new address[](2);
+        path[0] = USDT;
+        path[1] = address(skp);
+        IUniswapV2Router02(uniswapV2Router).swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            100e18, 
+            0, 
+            path, 
+            openAddr, 
+            block.timestamp + 30
+        );
+
+        vm.stopPrank();
     }
 
 }
