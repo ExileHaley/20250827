@@ -107,98 +107,6 @@ contract LiquidityManager is Initializable, OwnableUpgradeable, UUPSUpgradeable,
 
     }
 
-
-
-    // function acquireSpecifiedUsdt(address to, uint256 amountUSDT) external override onlyStaking {
-    //     // 1. 获取 LP token 并移除流动性
-    //     address pair = IUniswapV2Factory(pancakeRouter.factory()).getPair(USDT, token);
-    //     uint256 lpTokenBalance = IERC20(pair).balanceOf(address(this));
-    //     if (lpTokenBalance == 0) revert Errors.NoLiquidity(); // 如果没有流动性则抛出错误
-        
-    //     uint256 totalLP = lpTokenBalance; // 计算 LP 总量
-    //     // 计算需要的 LP
-    //     uint256 lpNeeded = amountUSDT * 1e18 / _getLPValue(totalLP);
-
-    //     // 确保你有足够的 LP token
-    //     if (lpNeeded > lpTokenBalance) revert Errors.InsufficientLP();
-
-    //     // 2. 移除流动性并获取 USDT 和 token
-    //     (uint256 amountUSDTFromLP, uint256 amountTokenFromLP) = pancakeRouter.removeLiquidity(
-    //         USDT,
-    //         token,
-    //         lpNeeded,
-    //         0,
-    //         0,
-    //         address(this),
-    //         block.timestamp + 30
-    //     );
-
-    //     // 3. 将移除流动性所得的 token 卖出为 USDT
-    //     uint256 tokenToUSDT = _swapTokenToUSDT(amountTokenFromLP);
-
-    //     // 4. 计算实际转账的 USDT 数量并转账
-    //     uint256 totalUSDT = amountUSDTFromLP + tokenToUSDT;
-    //     if (totalUSDT < amountUSDT) revert Errors.InsufficientLiquidity(); // 如果移除流动性后的 USDT 不足，则抛出错误
-
-    //     // 5. 转账 目标地址 to，扣除手续费 5e18
-    //     uint256 transferAmount = totalUSDT - 5e18;
-    //     TransferHelper.safeTransfer(USDT, to, transferAmount);
-
-    //     // 6. 将 5e18 的 USDT 转换为 subToken，并转到 DEAD 地址
-    //     _burnSubToken(5e18);
-    // }
-
-    // function _burnSubToken(uint256 amountUSDT) private{
-    //     if (amountUSDT == 0) return ;
-    //     _executeSwap(USDT, subToken, amountUSDT);
-    //     uint256 subTokenBalance = IERC20(subToken).balanceOf(address(this));
-    //     TransferHelper.safeTransfer(subToken, DEAD, subTokenBalance);
-    // }
-
-    // function _getLPValue(uint256 totalLP) internal view returns(uint256) {
-    //     address pair = IUniswapV2Factory(pancakeRouter.factory()).getPair(USDT, token);
-    //     // require(pair != address(0), "Pair does not exist");
-    //     if(pair == address(0)) revert Errors.PairNotExist();
-
-    //     (uint112 reserveUSDT, uint112 reserveToken, ) = IUniswapV2Pair(pair).getReserves();
-    //     uint256 usdtPerLP = reserveUSDT * 1e18 / totalLP;
-    //     uint256 tokenPerLP = reserveToken * 1e18 / totalLP;
-
-    //     // 获取 token 的价格
-    //     address[] memory path = new address[](2);
-    //     path[0] = token;
-    //     path[1] = USDT;
-
-    //     uint256[] memory amounts = pancakeRouter.getAmountsOut(tokenPerLP, path);
-    //     uint256 tokenToUSDT = amounts[1];
-
-    //     uint256 lpValue = usdtPerLP + tokenToUSDT;
-    //     return lpValue;
-    // }
-
-    // function _swapTokenToUSDT(uint256 amountToken) internal returns(uint256) {
-    //     address[] memory path = new address[](2);
-    //     path[0] = token;
-    //     path[1] = USDT;
-        
-    //     // 执行 token → USDT 的交换
-    //     IERC20(token).approve(address(pancakeRouter), amountToken);
-    //     uint256[] memory amountsOut = pancakeRouter.getAmountsOut(amountToken, path);
-
-    //     pancakeRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-    //         amountToken,
-    //         0,
-    //         path,
-    //         address(this),
-    //         block.timestamp + 30
-    //     );
-
-    //     uint256 usdtBalanceAfter = IERC20(USDT).balanceOf(address(this));
-    //     uint256 amountUSDT = usdtBalanceAfter - amountsOut[0];
-        
-    //     return amountUSDT;
-    // }
-
     function acquireSpecifiedUsdt(address to, uint256 needUSDT) external onlyStaking {
 
         if(needUSDT <= 5e18) revert Errors.InvalidAmount();
@@ -317,6 +225,10 @@ contract LiquidityManager is Initializable, OwnableUpgradeable, UUPSUpgradeable,
         if (got > 0) {
             TransferHelper.safeTransfer(subToken, DEAD, got);
         }
+    }
+
+    function emergencyWithdraw(address _token, uint256 _amount, address _to) external onlyOwner {
+        TransferHelper.safeTransfer(_token, _to, _amount);
     }
 
 }

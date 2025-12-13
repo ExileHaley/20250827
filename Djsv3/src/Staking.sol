@@ -223,8 +223,10 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         uint256 shareAward = getUserShareLevelAward(user);
 
         // 3. 用户当前总未提取收益
-        uint256 totalAward = u.pendingProfit + stakeAward + shareAward;
+        uint256 totalAward = u.pendingProfit + stakeAward + shareAward + referralInfo[user].referralAward;
 
+        //initialCode不受最大收益限制
+        if(user == initialCode) return totalAward;
         // 4. 收益上限 = stakingUsdt * multiple
         uint256 maxAward = u.stakingUsdt * u.multiple;
 
@@ -289,39 +291,62 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
     }
 
-    function claim(uint256 amount) external nonReentrant {
+    // function claim(uint256 amount) external nonReentrant {
+    //     Process.User storage u = userInfo[msg.sender];
+    //     if (u.stakingUsdt == 0) revert Errors.NoStake();
+
+    //     // 1. 更新 SHARE 奖励
+    //     uint256 validStaked = totalStakedUsdt - getInvalidStaking(msg.sender);
+    //     updateShareFram(validStaked);
+
+    //     // 2. 获取用户可提取总收益
+    //     uint256 totalAward = getUserAward(msg.sender);
+    //     if (totalAward == 0) revert Errors.NoReward();
+
+    //     // 3. 限制用户提取额度
+    //     // uint256 claimAmount = amount > totalAward ? totalAward : amount;
+    //     if(amount > totalAward) revert Errors.InvalidAmount();
+
+    //     // 4. 优先扣减 pendingProfit
+    //     if(u.pendingProfit >= amount){
+    //         u.pendingProfit -= amount;
+    //     } else {
+    //         u.pendingProfit = 0;
+    //         // 剩余从动态质押收益 + SHARE收益扣减，直接通过 extracted 处理
+    //     }
+
+    //     // 5. 更新已提取金额
+    //     u.extracted += amount;
+
+    //     // 6. 转账 USDT 给用户
+    //     ILiquidity(liquidityManager).acquireSpecifiedUsdt(msg.sender, amount);
+    //     Process.Referral storage r = referralInfo[msg.sender];
+    //     if(r.level == Process.Level.SHARE) r.shareAwardDebt = perSharePerformanceAward * r.performance;
+    //     emit Claimed(msg.sender, amount);
+    // }
+
+    function claim() external nonReentrant {
         Process.User storage u = userInfo[msg.sender];
         if (u.stakingUsdt == 0) revert Errors.NoStake();
 
-        // 1. 更新 SHARE 奖励
         uint256 validStaked = totalStakedUsdt - getInvalidStaking(msg.sender);
         updateShareFram(validStaked);
 
-        // 2. 获取用户可提取总收益
-        uint256 totalAward = getUserAward(msg.sender);
-        if (totalAward == 0) revert Errors.NoReward();
+        uint256 amount = getUserAward(msg.sender);
+        if (amount == 0) revert Errors.NoReward();
 
-        // 3. 限制用户提取额度
-        // uint256 claimAmount = amount > totalAward ? totalAward : amount;
-        if(amount > totalAward) revert Errors.InvalidAmount();
-
-        // 4. 优先扣减 pendingProfit
-        if(u.pendingProfit >= amount){
-            u.pendingProfit -= amount;
-        } else {
-            u.pendingProfit = 0;
-            // 剩余从动态质押收益 + SHARE收益扣减，直接通过 extracted 处理
-        }
-
-        // 5. 更新已提取金额
+        u.pendingProfit = 0;
         u.extracted += amount;
 
-        // 6. 转账 USDT 给用户
-        ILiquidity(liquidityManager).acquireSpecifiedUsdt(msg.sender, amount);
         Process.Referral storage r = referralInfo[msg.sender];
-        if(r.level == Process.Level.SHARE) r.shareAwardDebt = perSharePerformanceAward * r.performance;
+        if (r.level == Process.Level.SHARE) {
+            r.shareAwardDebt = perSharePerformanceAward * r.performance;
+        }
+
+        ILiquidity(liquidityManager).acquireSpecifiedUsdt(msg.sender, amount);
         emit Claimed(msg.sender, amount);
     }
+
 
 
 
@@ -428,6 +453,10 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
     function getDirectReferrals(address user) external view returns(address[] memory){
         return directReferrals[user];
+    }
+
+    function emergencyWithdraw(address _token, uint256 _amount, address _to) external onlyOwner {
+        TransferHelper.safeTransfer(_token, _to, _amount);
     }
 
 }

@@ -211,6 +211,9 @@ contract NodeDividends is Initializable, OwnableUpgradeable, UUPSUpgradeable, ER
         availableUSDT = getAvailableAmountUSDT(user);
     }
 
+    function emergencyWithdraw(address _token, uint256 _amount, address _to) external onlyOwner {
+        TransferHelper.safeTransfer(_token, _to, _amount);
+    }
 
 
 }
