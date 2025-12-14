@@ -179,8 +179,7 @@ contract StakingTest is Test{
         assertEq(subCoinQuota, 100e18);
 
         vm.warp(block.timestamp + 1 days);
-        uint256 award = staking.getUserAward(user);
-        console.log("The daily earnings should be 1300, of which 100 is the referral reward:",award);
+        
 
         //邀请收益+质押收益封顶
         vm.warp(block.timestamp + 300 days);
@@ -191,7 +190,7 @@ contract StakingTest is Test{
 
     //测试质押收益和再质押收益
     function test_stake_and_stake_claim() public {
-        test_stake(initialCode, user, 1000e18);
+        test_stake(initialCode, user, 100e18);
         //让user升级到V1
         address user1 = address(5);
         address user2 = address(6);
@@ -202,21 +201,104 @@ contract StakingTest is Test{
 
         //让user拿一次V1升级奖励
         address user4 = address(8);
-        test_stake(user, user4, 1000e18);
+        test_stake(user, user4, 100e18);
 
         //时间过去一天
         vm.warp(block.timestamp + 1 days);
-        console.log("The daily earnings should be 112e18, of which 100 is the referral reward:",award);
-
+       
         //user做二次质押
         vm.startPrank(user);
-        deal(USDT, user, 1000e18);
-        staking.stake(amountUSDT);
+        IERC20(USDT).approve(address(staking), 100e18);
+        deal(USDT, user, 100e18);
+        staking.stake(100e18);
         vm.stopPrank();
+        (uint256 stakingUsdt,uint256 multiple,uint256 stakingTime,,)=staking.userInfo(user);
+        assertEq(stakingUsdt, 200e18); 
+        assertEq(multiple, 2);
+        assertEq(stakingTime, block.timestamp);
+        // uint256 totalAward = staking.getUserAward(user);
+        // console.log("restake total award:",totalAward);
 
-        
+        //提取收益数据验证
+        vm.startPrank(user);
+        staking.claim();
+        (,,,uint256 pendingProfit0,)=staking.userInfo(user);
+        assertEq(pendingProfit0, 0);
+        // assertEq(extracted, 1199232e12);
+        assertEq(staking.getUserAward(user), 0);
+
+        //再次质押数据验证
+        //时间继续过去1天
+        vm.warp(block.timestamp + 1 days);
+        IERC20(USDT).approve(address(staking), 100e18);
+        deal(USDT, user, 100e18);
+        staking.stake(100e18);
+        (,,uint256 stakingTime1,uint256 pendingProfit1,uint256 extracted1)=staking.userInfo(user);
+        assertEq(stakingTime1, block.timestamp);
+        // assertEq(left, right);
+        console.log("pendingProfit1:",pendingProfit1);
+        console.log("extracted1:",extracted1);
+        uint256 totalAward1 = staking.getUserAward(user);
+        console.log("totalAward1:",totalAward1);
+
+        vm.stopPrank();
     }
 
+    function test_upgrade_to_share() internal  {
+        test_stake(initialCode, user, 100e18);
+        address user1 = address(5);
+        address user2 = address(6);
+        test_stake(user, user1, 100e18);
+        test_stake(user, user2, 100e18);
+
+        address[10] memory v5ReferralsForUser;
+        for(uint i=0; i<9; i++){
+            address u = address(uint160(40 + i));
+            v5ReferralsForUser[i] = u;
+            test_stake(user, u, 400000e18);
+        }
+        (Process.Level level0,,,,,) = staking.getUserInfoBasic(user);
+        assertEq(uint256(level0), uint256(Process.Level.V5));
+
+        address[10] memory v5ReferralsForUser1;
+        for(uint i=0; i<9; i++){
+            address u = address(uint160(10 + i));
+            v5ReferralsForUser1[i] = u;
+            test_stake(user1, u, 400000e18);
+        }
+        (Process.Level level1,,,,,) = staking.getUserInfoBasic(user1);
+        assertEq(uint256(level1), uint256(Process.Level.V5));
+
+
+        address[10] memory v5ReferralsForUser2;
+        for(uint i=0; i<9; i++){
+            address u = address(uint160(30 + i));
+            v5ReferralsForUser2[i] = u;
+            test_stake(user2, u, 400000e18);
+        }
+        (Process.Level level2,,,,,) = staking.getUserInfoBasic(user2);
+        assertEq(uint256(level2), uint256(Process.Level.V5));
+
+
+        address user3 = address(100);
+        test_stake(user1, user3, 100e18);
+        (Process.Level level3,,,,,) = staking.getUserInfoBasic(user);
+        // console.log("user level:",uint256(level2));
+        assertEq(uint256(level3), uint256(Process.Level.SHARE));
+
+    }
+
+    function test_shareAward() public {
+        test_upgrade_to_share();
+        uint256 predictTotalStake = 10800400e18;
+        assertEq(predictTotalStake, staking.totalStakedUsdt());
+        assertEq(10800200e18, staking.totalSharePerformance());
+
+        // uint256 awardPercent10 = 10800400e18 * 
+
+    }
+    //10800400  000000000000000000
+    //5400200
 
     // function test_stake() public {
     //     vm.startPrank(user);

@@ -32,25 +32,26 @@ library Process {
     // 计算某用户升级后的等级和新增 sharePerformance
     function calcUpgradeLevel(
         Referral memory r,
+        uint256 directReferralsCount,
         uint256 directV5Count
     ) internal pure returns (Level newLevel, uint256 addedShare, bool upgrade) {
         newLevel = r.level;
         addedShare = 0;
         upgrade = false;
 
-        if(r.level == Level.V0 && r.referralNum >= 3 && r.performance >= 10000e18){
+        if(r.level == Level.V0 && directReferralsCount >= 3 && r.performance >= 10000e18){
             newLevel = Level.V1;
             upgrade = true;
-        } else if(r.level == Level.V1 && r.referralNum >= 4 && r.performance >= 50000e18){
+        } else if(r.level == Level.V1 && directReferralsCount >= 4 && r.performance >= 50000e18){
             newLevel = Level.V2;
             upgrade = true;
-        } else if(r.level == Level.V2 && r.referralNum >= 5 && r.performance >= 200000e18){
+        } else if(r.level == Level.V2 && directReferralsCount >= 5 && r.performance >= 200000e18){
             newLevel = Level.V3;
             upgrade = true;
-        } else if(r.level == Level.V3 && r.referralNum >= 7 && r.performance >= 800000e18){
+        } else if(r.level == Level.V3 && directReferralsCount >= 7 && r.performance >= 800000e18){
             newLevel = Level.V4;
             upgrade = true;
-        } else if(r.level == Level.V4 && r.referralNum >= 9 && r.performance >= 3000000e18){
+        } else if(r.level == Level.V4 && directReferralsCount >= 9 && r.performance >= 3000000e18){
             newLevel = Level.V5;
             upgrade = true;
         } else if(r.level == Level.V5 && directV5Count >= 2){

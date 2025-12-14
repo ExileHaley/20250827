@@ -86,6 +86,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     uint256 public perSharePerformanceAward;
     uint256 public totalSharePerformance;
     uint256 public shareRate;
+
     
 
     //新增一个方法判断当前用户质押的stakingUsdt是否有效理财
@@ -116,6 +117,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         decimals = 1e10;
         perSecondStakedAeward = uint256(12e18 * decimals / 1000e18 / 86400); //这里得计算一下每秒奖励的代币数
         shareRate = 10; //share 奖励比例10%
+        lastShareAwardTime = block.timestamp;
         subCoinQuotas[Process.Level.V1] = 100e18;
         subCoinQuotas[Process.Level.V2] = 300e18;
         subCoinQuotas[Process.Level.V3] = 500e18;
@@ -132,7 +134,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         pause = isPause;
     }
 
-    function migrationReferral(address user) external nonReentrant Pause{
+    function migrationReferral(address user) external nonReentrant{
         Process.Referral storage r = referralInfo[user];
         if(r.isMigration) revert Errors.AlreadyMigrated();
         (address recommender,,,) = IDjsv1(djsv1).userInfo(user);
@@ -147,7 +149,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         return (v1Recommender != address(0) && !referralInfo[user].isMigration);
     }
 
-    function referral(address recommender) external nonReentrant Pause{
+    function referral(address recommender) external nonReentrant {
         //需要映射
         if(whetherNeedMigrate(msg.sender)) revert Errors.NeedMigrate();
         if(recommender == address(0)) revert Errors.ZeroAddress();
@@ -160,7 +162,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         emit Referrals(recommender, msg.sender);
     }
 
-    function stake(uint256 amountUSDT) external nonReentrant Pause{
+    function stake(uint256 amountUSDT) external nonReentrant{
         Process.User storage u = userInfo[msg.sender];
         Process.Referral storage r = referralInfo[msg.sender];
         if(r.recommender == address(0)) revert Errors.NotRequiredReferral();
@@ -180,15 +182,18 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         //先计算之前的收益给 pendingProfit，计算参数包括理财收益
         //1.用户总收益不能大雨stakingUsdt * multiple
         //2.stakingUsdt * multiple <= 理财收益 + referralAward + extracted + pendingProfit + 
-        uint256 reward = getUserAward(msg.sender);
-        if(reward > 0) u.pendingProfit += reward;
-        if(r.level == Process.Level.SHARE) r.shareAwardDebt = perSharePerformanceAward * r.performance;
+        _settleStakingReward(msg.sender);
+        if(r.level == Process.Level.SHARE) {
+            updateShareFram(totalStakedUsdt);
+            uint256 shareAward = getUserShareLevelAward(msg.sender);
+            if(shareAward > 0) {
+                u.pendingProfit += shareAward;
+            }
+            r.shareAwardDebt = perSharePerformanceAward * r.performance;
+        }
 
-        //更新stakingUsdt
-        u.stakingUsdt += amountUSDT;
-        //更新质押时间stakingTime
-        u.stakingTime = block.timestamp;
         //根据数量设置倍数 multiple
+        u.stakingUsdt += amountUSDT;
         uint256 newMultiple = u.stakingUsdt > 3000e18 ? 3 : 2;
         if (u.multiple != newMultiple) {
             u.multiple = newMultiple;
@@ -205,6 +210,41 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
         if(sharePerformance > 0) totalSharePerformance += sharePerformance;
         emit Staked(msg.sender, amountUSDT);
     }
+
+    /**
+    * @dev 结算用户到当前时间为止的【质押收益】，
+    *      只结算 staking 收益，不涉及 referral / share。
+    *      调用后会重置 stakingTime。
+    */
+    function _settleStakingReward(address user) internal  {
+        Process.User storage u = userInfo[user];
+
+        // 没有质押则不处理
+        if (u.stakingUsdt == 0) {
+            u.stakingTime = block.timestamp;
+            return;
+        }
+
+        // 距离上次结算的时间
+        uint256 delta = block.timestamp - u.stakingTime;
+        if (delta == 0) return;
+
+        // 计算 staking 收益
+        uint256 reward =
+                delta
+                * perSecondStakedAeward
+                * u.stakingUsdt
+                / decimals;
+
+        // 累加到 pending
+        if (reward > 0) {
+            u.pendingProfit += reward;
+        }
+
+        // 重置质押时间
+        u.stakingTime = block.timestamp;
+    }
+
 
     //计算用户当前真实可提取收益
     //1.收益包括质押收益 + 邀请收益 + share等级收益 = 总的毛收益
@@ -244,6 +284,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     //2.计算动态收益，按照上述方式计算没更新的当前时间段内的收益，动态计算不依赖更新
     //3.把两部分的收益加起来就等于总的Share等级收益
     function getUserShareLevelAward(address user) public view returns(uint256){
+        if(lastShareAwardTime ==0 ) return 0;
         Process.Referral memory r = referralInfo[user];
         if (r.performance == 0 || totalSharePerformance == 0) return 0;
 
@@ -270,6 +311,12 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     }
 
     function updateShareFram(uint256 totalStaked) internal {
+
+        // if(lastShareAwardTime ==0 ) {
+        //     lastShareAwardTime = block.timestamp;
+        //     return;
+        // }
+
         uint256 delta = block.timestamp - lastShareAwardTime;
         if (delta == 0 || totalSharePerformance == 0) {
             lastShareAwardTime = block.timestamp;
@@ -325,7 +372,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
     //     emit Claimed(msg.sender, amount);
     // }
 
-    function claim() external nonReentrant {
+    function claim() external nonReentrant Pause{
         Process.User storage u = userInfo[msg.sender];
         if (u.stakingUsdt == 0) revert Errors.NoStake();
 
@@ -337,8 +384,8 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
 
         u.pendingProfit = 0;
         u.extracted += amount;
-
         Process.Referral storage r = referralInfo[msg.sender];
+        r.referralAward = 0;
         if (r.level == Process.Level.SHARE) {
             r.shareAwardDebt = perSharePerformanceAward * r.performance;
         }
@@ -381,9 +428,11 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentran
                 hasRewarded[uint256(r.level)] = true;
                 totalRate -= 10;
             }
+            
+            
 
             // 计算等级升级
-            (Process.Level newLevel, uint256 addedShare, bool upgrade) = Process.calcUpgradeLevel(r, directV5);
+            (Process.Level newLevel, uint256 addedShare, bool upgrade) = Process.calcUpgradeLevel(r, directReferrals[current].length, directV5);
             r.level = newLevel;
             sharePerformance += addedShare;
             if(upgrade) r.subCoinQuota += subCoinQuotas[newLevel];
