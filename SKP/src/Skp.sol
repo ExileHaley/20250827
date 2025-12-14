@@ -40,7 +40,7 @@ contract Skp is ERC20, Ownable{
     //constant param init
     IPancakeRouter02 public pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
-    address public constant OPEN_ADDR = 0x717Cc0E17a361c6fe16dB3238255Cda2d79f5a1A;
+    address public constant OPEN_ADDR = 0xd911B113234D37f1EAb8FB47a5d9547529392385;
     uint256 public constant SELL_RATE = 5;
     //pair
     address public pancakePair;

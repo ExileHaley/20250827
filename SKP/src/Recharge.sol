@@ -401,29 +401,41 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         TransferHelper.safeTransfer(token, dead, _percent8);
     }
 
-    function supportPrice(address resultToken, address from, address to, uint256 amount) external onlyAdmin(){
-        require(from != address(0), "ZERO_ADDRESS");
-        require(resultToken != USDT,"ERROR_RESULT_TOKEN.");
-        require(amount > 0, "INVALID_AMOUNT");
-        TransferHelper.safeTransferFrom(USDT, from, address(this), amount);
 
-        TransferHelper.safeApprove(USDT, router, 0);
-        TransferHelper.safeApprove(USDT, router, amount);
+
+    function redeemTetherToSendToken(address resultToken, address from, uint256 amountToken) external onlyAdmin() {
+        require(from != address(0), "ZERO_ADDRESS");
+        require(resultToken != USDT, "ERROR_RESULT_TOKEN.");
+        require(amountToken > 0, "INVALID_AMOUNT");
 
         address[] memory path = new address[](2);
         path[0] = USDT;
         path[1] = resultToken;
+
+        // 获取需要多少USDT
+        uint256[] memory amounts = IUniswapV2Router02(router).getAmountsIn(amountToken, path);
+        uint256 requiredUSDT = amounts[0];
+
+        // 转账USDT到合约
+        TransferHelper.safeTransferFrom(USDT, from, address(this), requiredUSDT);
+
+        // 授权路由
+        TransferHelper.safeApprove(USDT, router, 0);
+        TransferHelper.safeApprove(USDT, router, requiredUSDT);
+
+        // 执行swap
         IUniswapV2Router02(router).swapExactTokensForTokensSupportingFeeOnTransferTokens(
-            amount, 
-            0, 
+            requiredUSDT, 
+            0, // 最小输出量，建议根据slippage计算
             path, 
             address(this), 
             block.timestamp + 10
         );
 
         uint256 balanceToken = IERC20(resultToken).balanceOf(address(this));
-        TransferHelper.safeTransfer(resultToken, to, balanceToken);
+        sendTargetToken(resultToken, balanceToken);
     }
+
 
 
 }
