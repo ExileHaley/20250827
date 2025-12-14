@@ -19,7 +19,7 @@ interface IVenus {
 contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard{
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
     address public constant VENUS = 0xfD5840Cd36d94D7229439859C0112a4185BC0255;
-    uint256 public constant FIXED_AMOUNT = 1e17;//test
+    uint256 public constant FIXED_AMOUNT = 1000e18;//test
     // uint256 public constant FIXED_AMOUNT = 1000e18;
     uint256 public constant MAX_REFERRAL_DEPTH = 500;
     address public admin;
