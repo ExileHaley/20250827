@@ -18,8 +18,12 @@ interface IUniswapV2Router02 {
         address to,
         uint deadline
     ) external;
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
     function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
+    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
+}
+
+interface INodeDividends {
+    function updateFarm(uint256 amount) external;
 }
 
 // interface IPancakePair {
@@ -31,21 +35,28 @@ interface IUniswapV2Router02 {
 
 
 contract TDjs is ERC20, Ownable{
-
+    event SwapAndSendTax(address recipient, uint256 tokensSwapped);
     IUniswapV2Router02 public pancakeRouter = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
     address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
-    uint256 public constant FEE_RATE = 5;
+    uint256 public constant SWAP_DEAD_FEE_RATE = 2;
+    uint256 public constant SWAP_NODE_FEE_RATE = 3;
+    uint256 public constant PROFIT_MARKET_TAX_RATE = 20;
+    uint256 public constant PROFIT_NODE_TAX_RATE = 20;
+    uint256 public constant PROFIT_WALLET_TAX_RATE = 20;
 
     //pair
     address public pancakePair;
+
     address public marketing;
     address public nodeDividends;
-    address public buyback;
+    address public wallet;
 
     bool    private swapping;
+    bool    public  pause = true;
 
     mapping(address => bool) public allowlist;
+    mapping(address => uint256) public totalCostUsdt;
 
 
     constructor(address _initialRecipient)ERC20("DJS","DJSC")Ownable(msg.sender){
@@ -54,6 +65,177 @@ contract TDjs is ERC20, Ownable{
             .createPair(address(this), USDT);
         allowlist[_initialRecipient] = true;
     }
+
+    function setPause(bool isPause) external onlyOwner(){
+        pause = isPause;
+    }
+
+    function _update(address from, address to, uint256 amount) internal virtual override {
+        // 状态控制
+        if (swapping || from == address(0) || to == address(0) || allowlist[from] || allowlist[to]) {
+            super._update(from, to, amount);
+            return;
+        }
+
+        bool isBuy = from == pancakePair;
+        bool isSell = to == pancakePair;
+
+        if (isBuy) {
+            _handleBuy(to, amount);
+            return;
+        }
+
+        if (isSell) {
+            _handleSell(from, amount);
+            return;
+        }
+
+        // 非交易行为：处理合约代币分发
+        uint256 balanceToken = balanceOf(address(this));
+        if (balanceToken > 0) {
+            _swapAndDistribute(balanceToken);
+        }
+
+        super._update(from, to, amount);
+    }
+
+    // -------------------------- 买入处理 --------------------------
+    function _handleBuy(address to, uint256 amount) private {
+        require(!pause, "BUY_AND_SELL_ISDISABLED.");
+
+        uint256 deadFee = amount * SWAP_DEAD_FEE_RATE / 100;
+        uint256 nodeFee = amount * SWAP_NODE_FEE_RATE / 100;
+        uint256 toAmount = amount - deadFee - nodeFee;
+
+        _updateCost(to, toAmount);
+
+        // 扣除固定 swap 税
+        super._update(to, address(this), nodeFee);
+        super._update(to, DEAD, deadFee);
+
+        // 用户实际接收
+        super._update(to, to, toAmount);
+    }
+
+    // -------------------------- 卖出处理 --------------------------
+    function _handleSell(address from, uint256 amount) private {
+        require(!pause, "BUY_AND_SELL_ISDISABLED.");
+
+        uint256 deadFee = amount * SWAP_DEAD_FEE_RATE / 100;
+        uint256 nodeFee = amount * SWAP_NODE_FEE_RATE / 100;
+        uint256 toAmount = amount - deadFee - nodeFee;
+
+        // 计算盈利税
+        uint256 taxAmount = getProfitTaxToken(from, toAmount);
+
+        if (taxAmount > 0 ) {
+            super._update(from, address(this), taxAmount);
+            _distributeProfitTax(taxAmount);
+        }
+
+        // 扣除固定 swap 税
+        super._update(from, address(this), nodeFee);
+        super._update(from, DEAD, deadFee);
+
+        // 实际卖出到 pancakePair
+        super._update(from, pancakePair, toAmount - taxAmount);
+    }
+
+    // -------------------------- 盈利税分发 --------------------------
+    function _distributeProfitTax(uint256 taxAmount) private {
+        _swap(taxAmount * PROFIT_MARKET_TAX_RATE / 100, marketing);
+        uint256 nodePortion = taxAmount * PROFIT_NODE_TAX_RATE / 100;
+        _swap(nodePortion, nodeDividends);
+        INodeDividends(nodeDividends).updateFarm(getAmountOut(nodePortion));
+        _swap(taxAmount * PROFIT_WALLET_TAX_RATE / 100, wallet);
+    }
+
+    // -------------------------- 合约代币分发 --------------------------
+    function _swapAndDistribute(uint256 amountToken) private {
+        _swap(amountToken, nodeDividends);
+        INodeDividends(nodeDividends).updateFarm(getAmountOut(amountToken));
+    }
+
+
+
+    function getAmountOut(uint256 amountToken) public view returns(uint256){
+        address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = USDT;
+        uint256[] memory amounts = pancakeRouter.getAmountsOut(amountToken, path);
+        return amounts[1];
+    }
+
+    function _swap(uint256 amountToken, address to) private{
+        if (amountToken == 0) return ;
+        //update status
+        swapping = true;
+        address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = USDT;
+        _approve(address(this), address(pancakeRouter), amountToken);
+         try pancakeRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            amountToken,
+            0, 
+            path,
+            to,
+            block.timestamp + 30
+        ) {
+            emit SwapAndSendTax(to, amountToken);
+        }catch{}
+        //update status
+        swapping = false;
+    }
+
+    function currentPrice() public view returns (uint256) {
+        address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = USDT;
+        return pancakeRouter.getAmountsOut(1e18, path)[1];
+    }
+
+    function averagePriceOf(address user) public view returns (uint256) {
+        uint256 bal = balanceOf(user);
+        if (bal == 0) return 0;
+        return totalCostUsdt[user] * 1e18 / bal;
+    }
+
+    function _updateCost(address to, uint256 amountToken) private{
+        uint256 price = currentPrice(); // USDT / token
+        uint256 costUsdt = price * amountToken / 1e18;
+        totalCostUsdt[to] += costUsdt;
+    }
+
+    function getProfitTaxToken(
+        address from,
+        uint256 amountToken
+    ) public view returns (uint256 taxToken) {
+        if (amountToken == 0) return 0;
+
+        uint256 avg = averagePriceOf(from);
+        if (avg == 0) return 0;
+
+        uint256 price = currentPrice();
+        if (price <= avg) return 0;
+
+        uint256 totalProfitRate =
+            PROFIT_MARKET_TAX_RATE +
+            PROFIT_NODE_TAX_RATE +
+            PROFIT_WALLET_TAX_RATE;
+
+        // 盈利部分对应 token 数量
+        uint256 profitToken = amountToken * (price - avg) / price;
+
+        taxToken = profitToken * totalProfitRate / 100;
+
+        if (taxToken > amountToken) {
+            taxToken = amountToken * totalProfitRate / 100;
+        }
+
+        return taxToken;
+    }
+
+
 
 
 }
