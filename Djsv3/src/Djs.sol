@@ -34,7 +34,7 @@ interface INodeDividends {
 // }
 
 
-contract TDjs is ERC20, Ownable{
+contract Djs is ERC20, Ownable{
     event SwapAndSendTax(address recipient, uint256 tokensSwapped);
     IUniswapV2Router02 public pancakeRouter = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
@@ -59,15 +59,29 @@ contract TDjs is ERC20, Ownable{
     mapping(address => uint256) public totalCostUsdt;
 
 
-    constructor(address _initialRecipient)ERC20("DJS","DJSC")Ownable(msg.sender){
+    constructor(address _initialRecipient, address _marketing, address _wallet)ERC20("DJS","DJSC")Ownable(msg.sender){
         _mint(_initialRecipient, 100000e18);
         pancakePair = IPancakeFactory(pancakeRouter.factory())
             .createPair(address(this), USDT);
         allowlist[_initialRecipient] = true;
+        allowlist[_marketing] = true;
+        allowlist[_wallet] = true;
+        marketing = _marketing;
+        wallet    = _wallet;
     }
 
     function setPause(bool isPause) external onlyOwner(){
         pause = isPause;
+    }
+
+    function setNodeDividends(address _nodeDividends) external onlyOwner{
+        nodeDividends = _nodeDividends;
+    }
+
+    function setAllowlist(address[] memory addrs, bool isAllow) external onlyOwner{
+        for(uint i=0; i<addrs.length; i++){
+            allowlist[addrs[i]] = isAllow;
+        }
     }
 
     function _update(address from, address to, uint256 amount) internal virtual override {
@@ -96,7 +110,24 @@ contract TDjs is ERC20, Ownable{
             _swapAndDistribute(balanceToken);
         }
 
+        // ===== 非交易 transfer：成本迁移，不触发盈利税 =====
+        uint256 balanceBefore = balanceOf(from);
+        uint256 costBefore = totalCostUsdt[from];
+
         super._update(from, to, amount);
+
+        if (costBefore > 0 && balanceBefore > 0) {
+            uint256 migratedCost = costBefore * amount / balanceBefore;
+
+            // from 扣成本
+            totalCostUsdt[from] = costBefore - migratedCost;
+            if (totalCostUsdt[from] < 1e6) {
+                totalCostUsdt[from] = 0;
+            }
+
+            // to 加成本
+            totalCostUsdt[to] += migratedCost;
+        }
     }
 
     // -------------------------- 买入处理 --------------------------
@@ -120,7 +151,7 @@ contract TDjs is ERC20, Ownable{
     // -------------------------- 卖出处理 --------------------------
     function _handleSell(address from, uint256 amount) private {
         require(!pause, "BUY_AND_SELL_ISDISABLED.");
-
+        uint256 balanceBefore = balanceOf(from);
         uint256 deadFee = amount * SWAP_DEAD_FEE_RATE / 100;
         uint256 nodeFee = amount * SWAP_NODE_FEE_RATE / 100;
         uint256 toAmount = amount - deadFee - nodeFee;
@@ -139,24 +170,50 @@ contract TDjs is ERC20, Ownable{
 
         // 实际卖出到 pancakePair
         super._update(from, pancakePair, toAmount - taxAmount);
+
+
+        // ===== 成本清理 =====
+        uint256 balanceAfter = balanceOf(from);
+        if (balanceAfter == 0) {
+            totalCostUsdt[from] = 0;
+        } else {
+            uint256 costBefore = totalCostUsdt[from];
+            uint256 costRemoved = costBefore * amount / balanceBefore;
+            totalCostUsdt[from] = costBefore - costRemoved;
+
+            if (totalCostUsdt[from] < 1e6) {
+                totalCostUsdt[from] = 0;
+            }
+        }
+
     }
 
     // -------------------------- 盈利税分发 --------------------------
     function _distributeProfitTax(uint256 taxAmount) private {
+
         _swap(taxAmount * PROFIT_MARKET_TAX_RATE / 100, marketing);
-        uint256 nodePortion = taxAmount * PROFIT_NODE_TAX_RATE / 100;
-        _swap(nodePortion, nodeDividends);
-        INodeDividends(nodeDividends).updateFarm(getAmountOut(nodePortion));
         _swap(taxAmount * PROFIT_WALLET_TAX_RATE / 100, wallet);
+
+        uint256 nodePortion = taxAmount * PROFIT_NODE_TAX_RATE / 100;
+        if(nodeDividends != address(0)){
+            _swap(nodePortion, nodeDividends);
+            INodeDividends(nodeDividends).updateFarm(getAmountOut(nodePortion));
+        }else{
+             _swap(nodePortion, wallet);
+        }
+        
     }
 
     // -------------------------- 合约代币分发 --------------------------
     function _swapAndDistribute(uint256 amountToken) private {
-        _swap(amountToken, nodeDividends);
-        INodeDividends(nodeDividends).updateFarm(getAmountOut(amountToken));
+        
+        if(nodeDividends != address(0)){
+            _swap(amountToken, nodeDividends);
+            INodeDividends(nodeDividends).updateFarm(getAmountOut(amountToken));
+        }else{
+            _swap(amountToken, wallet);
+        }
     }
-
-
 
     function getAmountOut(uint256 amountToken) public view returns(uint256){
         address[] memory path = new address[](2);
@@ -188,6 +245,8 @@ contract TDjs is ERC20, Ownable{
     }
 
     function currentPrice() public view returns (uint256) {
+        // uint256 lp = IERC20(pancakePair).totalSupply();
+        // if(lp == 0) return 0;
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = USDT;
