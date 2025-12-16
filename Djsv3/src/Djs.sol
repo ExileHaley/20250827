@@ -42,8 +42,8 @@ contract Djs is ERC20, Ownable{
     uint256 public constant SWAP_DEAD_FEE_RATE = 2;
     uint256 public constant SWAP_NODE_FEE_RATE = 3;
     uint256 public constant PROFIT_MARKET_TAX_RATE = 20;
-    uint256 public constant PROFIT_NODE_TAX_RATE = 20;
-    uint256 public constant PROFIT_WALLET_TAX_RATE = 20;
+    uint256 public constant PROFIT_NODE_TAX_RATE = 10;
+    uint256 public constant PROFIT_WALLET_TAX_RATE = 5;
 
     //pair
     address public pancakePair;
@@ -53,14 +53,14 @@ contract Djs is ERC20, Ownable{
     address public wallet;
 
     bool    private swapping;
-    bool    public  pause = true;
+    bool    public  tradingOpen;
 
     mapping(address => bool) public allowlist;
     mapping(address => uint256) public totalCostUsdt;
 
 
     constructor(address _initialRecipient, address _marketing, address _wallet)ERC20("DJS","DJSC")Ownable(msg.sender){
-        _mint(_initialRecipient, 100000e18);
+        _mint(_initialRecipient, 1000000e18);
         pancakePair = IPancakeFactory(pancakeRouter.factory())
             .createPair(address(this), USDT);
         allowlist[_initialRecipient] = true;
@@ -70,8 +70,8 @@ contract Djs is ERC20, Ownable{
         wallet    = _wallet;
     }
 
-    function setPause(bool isPause) external onlyOwner(){
-        pause = isPause;
+    function setTradingOpen(bool _tradingOpen) external onlyOwner(){
+        tradingOpen = _tradingOpen;
     }
 
     function setNodeDividends(address _nodeDividends) external onlyOwner{
@@ -95,12 +95,12 @@ contract Djs is ERC20, Ownable{
         bool isSell = to == pancakePair;
 
         if (isBuy) {
-            _handleBuy(to, amount);
+            _handleBuy(from, to, amount);
             return;
         }
 
         if (isSell) {
-            _handleSell(from, amount);
+            _handleSell(from, to, amount);
             return;
         }
 
@@ -131,26 +131,26 @@ contract Djs is ERC20, Ownable{
     }
 
     // -------------------------- 买入处理 --------------------------
-    function _handleBuy(address to, uint256 amount) private {
-        require(!pause, "BUY_AND_SELL_ISDISABLED.");
+    function _handleBuy(address from, address to, uint256 amount) private {
+        require(tradingOpen, "BUY_AND_SELL_ISDISABLED.");
 
         uint256 deadFee = amount * SWAP_DEAD_FEE_RATE / 100;
         uint256 nodeFee = amount * SWAP_NODE_FEE_RATE / 100;
         uint256 toAmount = amount - deadFee - nodeFee;
 
-        _updateCost(to, toAmount);
+        _updateCost(to, amount + (amount * 25 / 1000));
 
         // 扣除固定 swap 税
-        super._update(to, address(this), nodeFee);
-        super._update(to, DEAD, deadFee);
+        super._update(from, address(this), nodeFee);
+        super._update(from, DEAD, deadFee);
 
         // 用户实际接收
-        super._update(to, to, toAmount);
+        super._update(from, to, toAmount);
     }
 
     // -------------------------- 卖出处理 --------------------------
-    function _handleSell(address from, uint256 amount) private {
-        require(!pause, "BUY_AND_SELL_ISDISABLED.");
+    function _handleSell(address from, address to, uint256 amount) private {
+        require(tradingOpen, "BUY_AND_SELL_ISDISABLED.");
         uint256 balanceBefore = balanceOf(from);
         uint256 deadFee = amount * SWAP_DEAD_FEE_RATE / 100;
         uint256 nodeFee = amount * SWAP_NODE_FEE_RATE / 100;
@@ -169,7 +169,7 @@ contract Djs is ERC20, Ownable{
         super._update(from, DEAD, deadFee);
 
         // 实际卖出到 pancakePair
-        super._update(from, pancakePair, toAmount - taxAmount);
+        super._update(from, to, toAmount - taxAmount);
 
 
         // ===== 成本清理 =====
@@ -190,11 +190,12 @@ contract Djs is ERC20, Ownable{
 
     // -------------------------- 盈利税分发 --------------------------
     function _distributeProfitTax(uint256 taxAmount) private {
+        uint256 marketingPortion = taxAmount * 57 / 100;
+        uint256 walletPortion    = taxAmount * 28 / 100;
+        uint256 nodePortion      = taxAmount - marketingPortion - walletPortion;
+        _swap(marketingPortion, marketing);
+        _swap(walletPortion, wallet);
 
-        _swap(taxAmount * PROFIT_MARKET_TAX_RATE / 100, marketing);
-        _swap(taxAmount * PROFIT_WALLET_TAX_RATE / 100, wallet);
-
-        uint256 nodePortion = taxAmount * PROFIT_NODE_TAX_RATE / 100;
         if(nodeDividends != address(0)){
             _swap(nodePortion, nodeDividends);
             INodeDividends(nodeDividends).updateFarm(getAmountOut(nodePortion));
@@ -288,7 +289,8 @@ contract Djs is ERC20, Ownable{
         taxToken = profitToken * totalProfitRate / 100;
 
         if (taxToken > amountToken) {
-            taxToken = amountToken * totalProfitRate / 100;
+            // taxToken = amountToken * totalProfitRate / 100;
+            taxToken = 0;
         }
 
         return taxToken;
