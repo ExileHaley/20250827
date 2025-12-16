@@ -12,6 +12,7 @@ contract SkpTest is Test{
     Skp public skp;
     address initialRecipient;
     address sellFee;
+    address buyFee;
 
     address user;
     address user1;
@@ -32,12 +33,13 @@ contract SkpTest is Test{
         //init address
         initialRecipient = vm.addr(1);
         sellFee = vm.addr(2);
+        buyFee = vm.addr(3);
         user = vm.addr(6);
         user1 = vm.addr(7);
 
 
         vm.startPrank(initialRecipient);
-        skp = new Skp(initialRecipient, sellFee);
+        skp = new Skp(initialRecipient, sellFee, buyFee);
         vm.stopPrank();
 
         addLiquidity_allowlist();

@@ -36,16 +36,19 @@ contract Skp is ERC20, Ownable{
     event SwapAndSendTax(address recipient, uint256 tokensSwapped);
     event SetAllowlist(address indexed user, bool allow);
     event SellFee(address from, uint256 amount, uint256 fee);
+    event BuyFee(address from, uint256 amount, uint256 fee);
     event TradingOpened();
     //constant param init
     IPancakeRouter02 public pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     address public constant USDT = 0x55d398326f99059fF775485246999027B3197955;
     address public constant OPEN_ADDR = 0xd911B113234D37f1EAb8FB47a5d9547529392385;
     uint256 public constant SELL_RATE = 5;
+    uint256 public constant BUY_RATE = 3;
     //pair
     address public pancakePair;
     //init param
     address public sellFee;
+    address public buyFee;
     //open trading
     bool    public tradingOpen = false;
     //status param
@@ -53,15 +56,17 @@ contract Skp is ERC20, Ownable{
     //allowlist
     mapping(address => bool) public allowlist;
     
-    constructor(address _initialRecipient,address _sellFee)ERC20("SKP","SKP")Ownable(msg.sender){
+    constructor(address _initialRecipient,address _sellFee, address _buyFee)ERC20("SKP","SKP")Ownable(msg.sender){
 
         _mint(_initialRecipient, 2100000e18);
         sellFee = _sellFee;
+        buyFee = _buyFee;
 
         pancakePair = IPancakeFactory(pancakeRouter.factory())
             .createPair(address(this), USDT);
         allowlist[_initialRecipient] = true;
         allowlist[_sellFee] = true;
+        allowlist[_buyFee] = true;
         allowlist[OPEN_ADDR] = true;
         
     }
@@ -103,18 +108,21 @@ contract Skp is ERC20, Ownable{
         bool isBuy = from == pancakePair;
         bool isSell = to == pancakePair;
 
-        // 3. buy and sell disabled
-        if (!tradingOpen) {
-            require(!isBuy && !isSell, "Trading not open");
-            super._update(from, to, amount);
+        if (!tradingOpen && isBuy) {
+            revert("Buy not open yet");
+        }
+
+
+        if(isBuy){
+            uint256 fee = (amount * BUY_RATE) / 100; // 3%
+            super._update(from, address(this), fee);
+            uint256 sendAmount = amount - fee;
+            super._update(from, to, sendAmount);
+            emit BuyFee(from, amount, fee);
             return;
         }
 
-        // 4. Buy disabled
-        require(!isBuy, "Buy disabled");
-
         if (isSell) {
-            
             //compute fee
             uint256 fee = (amount * SELL_RATE) / 100; // 5%
             super._update(from, address(this), fee);
@@ -124,6 +132,11 @@ contract Skp is ERC20, Ownable{
             super._update(from, to, sendAmount);
             emit SellFee(from, amount, fee);
             return;
+        }
+
+        uint256 amountToken = balanceOf(address(this));
+        if(!isBuy && !isSell && amountToken > 0){
+            _processFee(amountToken, buyFee);
         }
 
         super._update(from, to, amount);

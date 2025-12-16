@@ -23,7 +23,7 @@ contract DeployScript is Script{
     //skp param
     address public initialRecipient;
     address public sellFee;
-
+    address public buyFee;
 
 
     function setUp() public {
@@ -44,12 +44,13 @@ contract DeployScript is Script{
         //skp param init
         initialRecipient = 0xD4360fAE9a810Be17b5fC1edF12849675996f712;
         sellFee = 0x73832D01364c48e4b6C49B9ECBF07aB92852B67c;
+        buyFee = 0x940FA6e4dCBBA8Fb25470663849B815a732a021C;
     }
 
     function run() public {
         vm.startBroadcast();
         //fact deploy
-        skp = new Skp(initialRecipient, sellFee);
+        skp = new Skp(initialRecipient, sellFee, buyFee);
         //recharge deploy
         Recharge rechargeImpl = new Recharge();
 
