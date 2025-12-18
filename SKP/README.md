@@ -17,6 +17,17 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit --no
 $ forge script script/Deploy.s.sol -vvv --rpc-url=https://bsc.blockrazor.xyz --broadcast --private-key=[privateKey] --slow
 ```
 
+### verify token contract
+```shell
+$ forge verify-contract --chain-id 56 --compiler-version v0.8.30+commit.a1b79de6 0x7D5014e549E83F2Abb1F346caCd9773245D51923 src/Skp.sol:Skp  --constructor-args 0x000000000000000000000000d4360fae9a810be17b5fc1edf12849675996f71200000000000000000000000073832d01364c48e4b6c49b9ecbf07ab92852b67c000000000000000000000000940fa6e4dcbba8fb25470663849b815a732a021c --etherscan-api-key Y43WNBZNXWR5V4AWQKGAQ9RCQEXTUHK88V
+
+
+### build token constructor
+```shell
+$ cast abi-encode "constructor(address,address,address)" 0xD4360fAE9a810Be17b5fC1edF12849675996f712 0x73832D01364c48e4b6C49B9ECBF07aB92852B67c 0x940FA6e4dCBBA8Fb25470663849B815a732a021C 
+
+
+
 #### abi:./out/recharge.sol/recharge.json
 
 ```solidity
