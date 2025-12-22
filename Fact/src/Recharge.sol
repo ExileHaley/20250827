@@ -26,7 +26,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
     address public constant router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
     address public constant factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
     address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
-    address public constant donation = 0xf8d9fbc9Db44E378C603b45000c81066630EcCd2;
+    address public constant donation = 0xCB151A95468278F391bd7122aD9bbb5F42185b5c;
     
     struct Info{
         address user;
