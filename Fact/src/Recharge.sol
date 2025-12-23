@@ -93,7 +93,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
         percent100 = _percent100;
         fact = _fact;
     }
-
+    event SentBNB(address from, address to, uint256 amount);
     function singleRecharge(address token, uint256 amount, string calldata remark) external payable {
         require(amount > 0, "ERROR_AMOUNT");
 
@@ -199,6 +199,7 @@ contract Recharge is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentra
             // 剩余 70% BNB 转给 recipient
             if (bnbForRecipient > 0) {
                 TransferHelper.safeTransferETH(recipient, bnbForRecipient);
+                emit SentBNB(msg.sender, recipient, bnbForRecipient);
             }
 
             // 多余 ETH 退回
